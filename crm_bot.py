@@ -1,18 +1,9 @@
 import os
 import asyncio
-import time
 
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import (
-    Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton
-)
-
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
 from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
 
 import psycopg2
 
@@ -20,6 +11,7 @@ import psycopg2
 
 TOKEN = os.getenv("TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 ADMIN_ID = 8398266271
 
 # ================= BOT =================
@@ -31,6 +23,7 @@ dp = Dispatcher()
 
 conn = psycopg2.connect(DATABASE_URL)
 conn.autocommit = True
+
 cursor = conn.cursor()
 
 # ================= TABLES =================
@@ -70,3 +63,63 @@ CREATE TABLE IF NOT EXISTS appointments (
     client_id INTEGER
 )
 """)
+
+# ================= START =================
+
+@dp.message(Command("start"))
+async def start_cmd(message: Message):
+
+    user_id = message.from_user.id
+    full_name = message.from_user.full_name
+
+    cursor.execute(
+        "SELECT * FROM clients WHERE tg_id = %s",
+        (user_id,)
+    )
+
+    client = cursor.fetchone()
+
+    if not client:
+        cursor.execute(
+            """
+            INSERT INTO clients (tg_id, name)
+            VALUES (%s, %s)
+            """,
+            (user_id, full_name)
+        )
+
+    text = (
+        "Добро пожаловать в CRM бот ✅\n\n"
+        "Ваш аккаунт сохранен."
+    )
+
+    await message.answer(text)
+
+# ================= ADMIN =================
+
+@dp.message(Command("admin"))
+async def admin_panel(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    cursor.execute("SELECT COUNT(*) FROM clients")
+    users_count = cursor.fetchone()[0]
+
+    text = (
+        f"👨‍💼 Админ панель\n\n"
+        f"Пользователей: {users_count}"
+    )
+
+    await message.answer(text)
+
+# ================= MAIN =================
+
+async def main():
+
+    print("CRM BOT STARTED")
+
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
