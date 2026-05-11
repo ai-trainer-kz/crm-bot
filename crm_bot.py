@@ -426,6 +426,7 @@ async def cancel_booking(message: Message):
 
         user_id = message.from_user.id
 
+        # Получаем клиента
         cursor.execute(
             """
             SELECT id
@@ -438,14 +439,15 @@ async def cancel_booking(message: Message):
         client = cursor.fetchone()
 
         if not client:
-            await message.answer("У вас нет записей.")
+            await message.answer("❌ У вас нет записей.")
             return
 
         client_id = client[0]
 
+        # Проверяем последнюю запись
         cursor.execute(
             """
-            SELECT id, service, date, time
+            SELECT id
             FROM appointments
             WHERE client_id = %s
             ORDER BY id DESC
@@ -454,13 +456,13 @@ async def cancel_booking(message: Message):
             (client_id,)
         )
 
-        booking = cursor.fetchone()
+        appointment = cursor.fetchone()
 
-        if not booking:
-            await message.answer("Записей нет.")
+        if not appointment:
+            await message.answer("❌ Записей не найдено.")
             return
 
-        appointment_id = booking[0]
+        appointment_id = appointment[0]
 
         # Удаляем запись
         cursor.execute(
@@ -473,20 +475,12 @@ async def cancel_booking(message: Message):
 
         conn.commit()
 
-        await message.answer(
-            f"❌ Запись отменена\n\n"
-            f"💅 Услуга: {booking[1]}\n"
-            f"📅 Дата: {booking[2]}\n"
-            f"🕒 Время: {booking[3]}"
-        )
+        await message.answer("✅ Ваша запись отменена.")
 
     except Exception as e:
-
         print("CANCEL ERROR:", e)
-
-        await message.answer(
-            f"❌ Ошибка отмены:\n{e}"
-        )
+        await message.answer(f"❌ Ошибка отмены:\n{e}")
+        
 @dp.message(F.text == "💰 Прайс")
 async def price(message: Message):
 
