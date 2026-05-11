@@ -365,47 +365,39 @@ async def contacts(message: Message):
     await message.answer(text)
 
 # ================= ADMIN FUNCTIONS =================
-
 @dp.message(F.text == "📋 Все записи")
 async def all_appointments(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
-        return
-
     cursor.execute("""
-    SELECT appointments.id,
-           clients.name,
-           appointments.service,
-           appointments.master,
-           appointments.date,
-           appointments.time,
-           appointments.status
-    FROM appointments
-    JOIN clients
-    ON appointments.client_id = clients.id
-    ORDER BY appointments.id DESC
+        SELECT service, master, date, time
+        FROM appointments
+        ORDER BY id DESC
     """)
 
-    data = cursor.fetchall()
+    appointments = cursor.fetchall()
 
-    if not data:
+    if not appointments:
         await message.answer("Записей пока нет.")
         return
 
     text = "📋 Все записи:\n\n"
 
-    for item in data:
+    for app in appointments:
+
+        service = app[0]
+        master = app[1]
+        date = app[2]
+        time = app[3]
+
         text += (
-            f"ID: {item[0]}\n"
-            f"👤 Клиент: {item[1]}\n"
-            f"💅 Услуга: {item[2]}\n"
-            f"👩‍🔬 Мастер: {item[3]}\n"
-            f"📅 {item[4]} {item[5]}\n"
-            f"📌 {item[6]}\n\n"
+            f"💅 Услуга: {service}\n"
+            f"👩 Мастер: {master}\n"
+            f"📅 Дата: {date}\n"
+            f"🕒 Время: {time}\n\n"
         )
 
     await message.answer(text)
-
+    
 @dp.message(F.text == "👥 Клиенты")
 async def clients_list(message: Message):
 
