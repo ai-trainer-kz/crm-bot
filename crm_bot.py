@@ -197,7 +197,7 @@ async def booking(message: Message):
 
     await message.answer(text)
 
-@dp.message()
+@dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
 
     try:
@@ -493,8 +493,8 @@ async def mailing(message: Message):
 
 # ================= AUTO ADD SERVICE =================
 
-@dp.message()
-async def text_handler(message: Message):
+@dp.message(F.text.contains(","))
+async def text_handler(message: Message)
 
     if message.from_user.id != ADMIN_ID:
         return
