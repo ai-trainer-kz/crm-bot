@@ -61,8 +61,6 @@ CREATE TABLE IF NOT EXISTS masters (
 )
 """)
 
-cursor.execute("DROP TABLE IF EXISTS appointments")
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
@@ -89,7 +87,7 @@ client_kb = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="🕒 Мои записи"),
-            KeyboardButton(text="💰 Прайс")
+            KeyboardButton(text="❌ Отменить запись")
         ],
         [
             KeyboardButton(text="📍 Адрес"),
@@ -254,6 +252,32 @@ async def save_booking(message: Message):
             client_id = client[0]
             current_visits = client[1]
 
+        # Проверка занятого времени
+        cursor.execute(
+            """
+            SELECT id
+            FROM appointments
+            WHERE master = %s
+            AND date = %s
+            AND time = %s
+            """,
+            (
+                master,
+                date,
+                time
+            )
+        )
+        
+        busy_slot = cursor.fetchone()
+        
+        if busy_slot:
+        
+            await message.answer(
+                "❌ Это время уже занято.\nВыберите другое время."
+            )
+        
+            return
+
         # Сохраняем запись
         cursor.execute(
             """
@@ -394,6 +418,64 @@ async def my_appointments(message: Message):
         )
 
     await message.answer(text)
+
+@dp.message(F.text == "❌ Отменить запись")
+async def cancel_booking(message: Message):
+
+    user_id = message.from_user.id
+
+    cursor.execute(
+        """
+        SELECT id
+        FROM clients
+        WHERE tg_id = %s
+        """,
+        (user_id,)
+    )
+
+    client = cursor.fetchone()
+
+    if not client:
+        await message.answer("У вас нет записей.")
+        return
+
+    client_id = client[0]
+
+    cursor.execute(
+        """
+        SELECT id, service, date, time
+        FROM appointments
+        WHERE client_id = %s
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (client_id,)
+    )
+
+    booking = cursor.fetchone()
+
+    if not booking:
+        await message.answer("Записей нет.")
+        return
+
+    appointment_id = booking[0]
+
+    cursor.execute(
+        """
+        DELETE FROM appointments
+        WHERE id = %s
+        """,
+        (appointment_id,)
+    )
+
+    conn.commit()
+
+    await message.answer(
+        f"❌ Запись отменена\n\n"
+        f"💅 {booking[1]}\n"
+        f"📅 {booking[2]}\n"
+        f"🕒 {booking[3]}"
+    )
 
 @dp.message(F.text == "💰 Прайс")
 async def price(message: Message):
