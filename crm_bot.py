@@ -213,7 +213,7 @@ async def save_booking(message: Message):
         service = lines[0]
         master = lines[1]
         date = lines[2]
-        time = lines[3]
+        time = lines[3].replace(".", ":")
 
         cursor.execute(
             """
