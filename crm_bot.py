@@ -472,6 +472,13 @@ async def cancel_booking(message: Message):
 
         conn.commit()
 
+        await bot.send_message(
+            ADMIN_ID,
+            f"❌ Запись отменена!\n\n"
+            f"👤 Клиент: {message.from_user.full_name}\n"
+            f"🆔 ID записи: {appointment_id}"
+        )
+
         await message.answer("✅ Запись отменена.")
 
     except Exception as e:
