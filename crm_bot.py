@@ -182,14 +182,53 @@ async def admin_panel(message: Message):
 async def booking(message: Message):
 
     text = (
-        "📅 Онлайн запись\n\n"
-        "Для записи напишите:\n"
-        "1. Услугу\n"
-        "2. Желаемую дату\n"
-        "3. Время"
+        "📅 Для записи отправьте одним сообщением:\n\n"
+        "Услуга | Мастер | Дата | Время\n\n"
+        "Пример:\n"
+        "Маникюр | Алина | 15 мая | 15:00"
     )
 
     await message.answer(text)
+
+@dp.message()
+async def save_booking(message: Message):
+
+    if "|" not in message.text:
+        return
+
+    try:
+        service, master, date, time = message.text.split("|")
+
+        service = service.strip()
+        master = master.strip()
+        date = date.strip()
+        time = time.strip()
+
+        cursor.execute(
+            """
+            INSERT INTO appointments
+            (client_id, service, master, date, time)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                message.from_user.id,
+                service,
+                master,
+                date,
+                time
+            )
+        )
+
+        await message.answer(
+            "✅ Вы успешно записаны!\n\n"
+            f"💅 Услуга: {service}\n"
+            f"👩 Мастер: {master}\n"
+            f"📅 Дата: {date}\n"
+            f"🕒 Время: {time}"
+        )
+
+    except:
+        pass
 
 @dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
