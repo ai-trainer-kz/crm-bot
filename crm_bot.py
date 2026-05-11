@@ -407,6 +407,7 @@ async def clients_list(message: Message):
     cursor.execute("""
     SELECT name, visits, total_paid
     FROM clients
+    WHERE name != 'AI Учитель Поддержка'
     ORDER BY id DESC
     """)
 
