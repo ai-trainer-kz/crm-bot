@@ -695,7 +695,65 @@ async def text_handler(message: Message):
 
             await message.answer("✅ Мастер добавлен")
 
-# ================= MAIN =================
+# ================= MAIN ================
+@dp.message(F.text == "❌ Отменить запись")
+async def cancel_booking(message: Message):
+
+    try:
+
+        user_id = message.from_user.id
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM clients
+            WHERE tg_id = %s
+            """,
+            (user_id,)
+        )
+
+        client = cursor.fetchone()
+
+        if not client:
+            await message.answer("❌ У вас нет записей.")
+            return
+
+        client_id = client[0]
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM appointments
+            WHERE client_id = %s
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (client_id,)
+        )
+
+        appointment = cursor.fetchone()
+
+        if not appointment:
+            await message.answer("❌ Записи не найдены.")
+            return
+
+        appointment_id = appointment[0]
+
+        cursor.execute(
+            """
+            DELETE FROM appointments
+            WHERE id = %s
+            """,
+            (appointment_id,)
+        )
+
+        conn.commit()
+
+        await message.answer("✅ Запись отменена.")
+
+    except Exception as e:
+        print("CANCEL ERROR:", e)
+        await message.answer(f"❌ Ошибка:\n{e}")
 
 async def main():
 
