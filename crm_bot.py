@@ -197,7 +197,7 @@ async def booking(message: Message):
 
     await message.answer(text)
 
-@dp.message()
+@dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
 
     try:
