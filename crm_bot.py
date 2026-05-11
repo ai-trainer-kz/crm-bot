@@ -230,15 +230,16 @@ async def save_booking(message: Message):
                 time
             )
         )
-
+        
+        conn.commit()
+        
         await message.answer(
-            f"✅ Вы успешно записаны!\n\n"
+            "✅ Вы успешно записаны!\n\n"
             f"💅 Услуга: {service}\n"
             f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
             f"🕒 Время: {time}"
         )
-
     except Exception as e:
         print("ERROR:", e)
         
