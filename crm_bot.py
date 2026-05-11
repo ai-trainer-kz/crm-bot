@@ -197,7 +197,7 @@ async def booking(message: Message):
 
     await message.answer(text)
 
-@dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
+@dp.message(F.text)
 async def save_booking(message: Message):
 
     try:
@@ -214,6 +214,25 @@ async def save_booking(message: Message):
         date = lines[2]
         time = lines[3]
 
+        # Меняем 15.00 → 15:00
+        time = time.replace(".", ":")
+
+        # Получаем клиента
+        cursor.execute(
+            "SELECT id, visits FROM clients WHERE tg_id = %s",
+            (message.from_user.id,)
+        )
+
+        client = cursor.fetchone()
+
+        if not client:
+            await message.answer("Ошибка клиента.")
+            return
+
+        client_id = client[0]
+        current_visits = client[1]
+
+        # Сохраняем запись
         cursor.execute(
             """
             INSERT INTO appointments
@@ -221,11 +240,24 @@ async def save_booking(message: Message):
             VALUES (%s, %s, %s, %s, %s)
             """,
             (
-                message.from_user.id,
+                client_id,
                 service,
                 master,
                 date,
                 time
+            )
+        )
+
+        # Обновляем визиты
+        cursor.execute(
+            """
+            UPDATE clients
+            SET visits = %s
+            WHERE id = %s
+            """,
+            (
+                current_visits + 1,
+                client_id
             )
         )
 
