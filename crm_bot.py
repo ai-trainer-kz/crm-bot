@@ -494,7 +494,7 @@ async def mailing(message: Message):
 # ================= AUTO ADD SERVICE =================
 
 @dp.message(F.text.contains(","))
-async def text_handler(message: Message)
+async def text_handler(message: Message):
 
     if message.from_user.id != ADMIN_ID:
         return
