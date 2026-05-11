@@ -197,23 +197,24 @@ async def booking(message: Message):
 
     await message.answer(text)
 
-@dp.message(lambda message: "\n" in message.text)
+@dp.message()
 async def save_booking(message: Message):
-
 
     try:
 
         text = message.text.strip()
 
-        lines = [line.strip() for line in text.split("\n") if line.strip()]
+        lines = text.split("\n")
 
-        if len(lines) < 4:
+        if len(lines) != 4:
             return
 
-        service = lines[0]
-        master = lines[1]
-        date = lines[2]
-        time = lines[3].replace(".", ":")
+        service = lines[0].strip()
+        master = lines[1].strip()
+        date = lines[2].strip()
+        time = lines[3].strip().replace(".", ":")
+
+        print(service, master, date, time)
 
         cursor.execute(
             """
@@ -231,7 +232,7 @@ async def save_booking(message: Message):
         )
 
         await message.answer(
-            "✅ Вы успешно записаны!\n\n"
+            f"✅ Вы успешно записаны!\n\n"
             f"💅 Услуга: {service}\n"
             f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
@@ -239,7 +240,7 @@ async def save_booking(message: Message):
         )
 
     except Exception as e:
-        print(e)
+        print("ERROR:", e)
         
 @dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
