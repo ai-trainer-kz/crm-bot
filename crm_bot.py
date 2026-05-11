@@ -202,15 +202,17 @@ async def save_booking(message: Message):
 
     try:
 
-        lines = message.text.split("\n")
+        text = message.text.strip()
 
-        if len(lines) != 4:
+        lines = [line.strip() for line in text.split("\n") if line.strip()]
+
+        if len(lines) < 4:
             return
 
-        service = lines[0].strip()
-        master = lines[1].strip()
-        date = lines[2].strip()
-        time = lines[3].strip()
+        service = lines[0]
+        master = lines[1]
+        date = lines[2]
+        time = lines[3]
 
         cursor.execute(
             """
@@ -235,8 +237,9 @@ async def save_booking(message: Message):
             f"🕒 Время: {time}"
         )
 
-    except:
-        pass
+    except Exception as e:
+        print(e)
+        
 @dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
 
