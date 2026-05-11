@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS masters (
 )
 """)
 
+cursor.execute("DROP TABLE IF EXISTS appointments")
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
