@@ -9,6 +9,9 @@ from aiogram.types import (
 )
 from aiogram.filters import Command
 
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
+
 import psycopg2
 
 # ================= CONFIG =================
@@ -37,7 +40,6 @@ CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,
     tg_id BIGINT UNIQUE,
     name TEXT,
-    phone TEXT,
     visits INTEGER DEFAULT 0,
     total_paid INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
@@ -64,7 +66,7 @@ CREATE TABLE IF NOT EXISTS masters (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
-    client_id INTEGER,
+    client_id BIGINT,
     service TEXT,
     master TEXT,
     date TEXT,
@@ -74,21 +76,30 @@ CREATE TABLE IF NOT EXISTS appointments (
 )
 """)
 
+# ================= FSM =================
+
+class BookingState(StatesGroup):
+    service = State()
+    master = State()
+    date = State()
+    time = State()
+
 # ================= KEYBOARDS =================
 
 client_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="📅 Записаться")
-        ],
+        [KeyboardButton(text="📅 Записаться")],
+
         [
             KeyboardButton(text="💅 Услуги"),
             KeyboardButton(text="👩‍🔬 Мастера")
         ],
+
         [
             KeyboardButton(text="🕒 Мои записи"),
             KeyboardButton(text="💰 Прайс")
         ],
+
         [
             KeyboardButton(text="📍 Адрес"),
             KeyboardButton(text="📞 Контакты")
@@ -99,19 +110,16 @@ client_kb = ReplyKeyboardMarkup(
 
 admin_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="📋 Все записи")
-        ],
+        [KeyboardButton(text="📋 Все записи")],
+
         [
             KeyboardButton(text="👥 Клиенты"),
             KeyboardButton(text="📊 Статистика")
         ],
+
         [
             KeyboardButton(text="➕ Добавить услугу"),
             KeyboardButton(text="➕ Добавить мастера")
-        ],
-        [
-            KeyboardButton(text="📢 Рассылка")
         ]
     ],
     resize_keyboard=True
@@ -141,13 +149,8 @@ async def start_cmd(message: Message):
             (user_id, full_name)
         )
 
-    text = (
-        "Добро пожаловать в CRM бот ✅\n\n"
-        "Ваш аккаунт сохранен."
-    )
-
     await message.answer(
-        text,
+        "Добро пожаловать в CRM бот ✅",
         reply_markup=client_kb
     )
 
@@ -165,83 +168,153 @@ async def admin_panel(message: Message):
     cursor.execute("SELECT COUNT(*) FROM appointments")
     appointments_count = cursor.fetchone()[0]
 
-    text = (
+    await message.answer(
         f"👨‍💼 Админ панель\n\n"
         f"👥 Пользователей: {users_count}\n"
-        f"📅 Записей: {appointments_count}"
-    )
-
-    await message.answer(
-        text,
+        f"📅 Записей: {appointments_count}",
         reply_markup=admin_kb
     )
 
-# ================= CLIENT MENU =================
+# ================= BOOKING =================
 
 @dp.message(F.text == "📅 Записаться")
-async def booking(message: Message):
+async def booking_start(message: Message, state: FSMContext):
 
-    text = (
-    "📅 Онлайн запись\n\n"
-    "Отправьте:\n\n"
-    "1. Услугу\n"
-    "2. Мастера\n"
-    "3. Дату\n"
-    "4. Время\n\n"
-    "Пример:\n\n"
-    "Стрижка\n"
-    "Мадина\n"
-    "12.05\n"
-    "13:00"
-)
+    cursor.execute("SELECT title FROM services")
+    services = cursor.fetchall()
 
-    await message.answer(text)
+    if not services:
+        await message.answer("Услуги пока не добавлены.")
+        return
 
-@dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
-async def save_booking(message: Message):
+    buttons = []
 
-    try:
+    for service in services:
+        buttons.append([KeyboardButton(text=service[0])])
 
-        text = message.text.strip()
+    kb = ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True
+    )
 
-        lines = [line.strip() for line in text.split("\n") if line.strip()]
+    await state.set_state(BookingState.service)
 
-        if len(lines) != 4:
-            return
+    await message.answer(
+        "💅 Выберите услугу:",
+        reply_markup=kb
+    )
 
-        service = lines[0]
-        master = lines[1]
-        date = lines[2]
-        time = lines[3]
+# ================= SERVICE =================
 
-        cursor.execute(
-            """
-            INSERT INTO appointments
-            (client_id, service, master, date, time)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (
-                message.from_user.id,
-                service,
-                master,
-                date,
-                time
-            )
+@dp.message(BookingState.service)
+async def booking_service(message: Message, state: FSMContext):
+
+    await state.update_data(service=message.text)
+
+    cursor.execute("SELECT name FROM masters")
+    masters = cursor.fetchall()
+
+    buttons = []
+
+    for master in masters:
+        buttons.append([KeyboardButton(text=master[0])])
+
+    kb = ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True
+    )
+
+    await state.set_state(BookingState.master)
+
+    await message.answer(
+        "👩 Выберите мастера:",
+        reply_markup=kb
+    )
+
+# ================= MASTER =================
+
+@dp.message(BookingState.master)
+async def booking_master(message: Message, state: FSMContext):
+
+    await state.update_data(master=message.text)
+
+    await state.set_state(BookingState.date)
+
+    await message.answer(
+        "📅 Введите дату:\n\nНапример: 15.05"
+    )
+
+# ================= DATE =================
+
+@dp.message(BookingState.date)
+async def booking_date(message: Message, state: FSMContext):
+
+    await state.update_data(date=message.text)
+
+    buttons = [
+        [KeyboardButton(text="10:00")],
+        [KeyboardButton(text="12:00")],
+        [KeyboardButton(text="14:00")],
+        [KeyboardButton(text="16:00")],
+        [KeyboardButton(text="18:00")]
+    ]
+
+    kb = ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=True
+    )
+
+    await state.set_state(BookingState.time)
+
+    await message.answer(
+        "🕒 Выберите время:",
+        reply_markup=kb
+    )
+
+# ================= TIME =================
+
+@dp.message(BookingState.time)
+async def booking_time(message: Message, state: FSMContext):
+
+    await state.update_data(time=message.text)
+
+    data = await state.get_data()
+
+    service = data["service"]
+    master = data["master"]
+    date = data["date"]
+    time = data["time"]
+
+    cursor.execute(
+        """
+        INSERT INTO appointments
+        (client_id, service, master, date, time)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (
+            message.from_user.id,
+            service,
+            master,
+            date,
+            time
         )
+    )
 
-        conn.commit()
+    conn.commit()
 
-        await message.answer(
-            "✅ Вы успешно записаны!\n\n"
-            f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
-            f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}"
-        )
+    await message.answer(
+        "✅ Вы успешно записаны!\n\n"
+        f"💅 Услуга: {service}\n"
+        f"👩 Мастер: {master}\n"
+        f"📅 Дата: {date}\n"
+        f"🕒 Время: {time}",
+        reply_markup=client_kb
+    )
 
-    except Exception as e:
-        print("BOOKING ERROR:", e)
-        
+    await state.clear()
+
+# ================= SERVICES =================
+
 @dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
 
@@ -259,6 +332,8 @@ async def services(message: Message):
         text += f"• {service[0]} — {service[1]}₸\n"
 
     await message.answer(text)
+
+# ================= MASTERS =================
 
 @dp.message(F.text == "👩‍🔬 Мастера")
 async def masters(message: Message):
@@ -278,32 +353,19 @@ async def masters(message: Message):
 
     await message.answer(text)
 
+# ================= MY APPOINTMENTS =================
+
 @dp.message(F.text == "🕒 Мои записи")
 async def my_appointments(message: Message):
 
-    user_id = message.from_user.id
-
-    cursor.execute(
-        "SELECT id FROM clients WHERE tg_id = %s",
-        (user_id,)
-    )
-
-    client = cursor.fetchone()
-
-    if not client:
-        await message.answer("Вы не зарегистрированы.")
-        return
-
-    client_id = client[0]
-
     cursor.execute(
         """
-        SELECT service, master, date, time, status
+        SELECT service, master, date, time
         FROM appointments
         WHERE client_id = %s
         ORDER BY id DESC
         """,
-        (client_id,)
+        (message.from_user.id,)
     )
 
     appointments = cursor.fetchall()
@@ -315,15 +377,17 @@ async def my_appointments(message: Message):
     text = "🕒 Ваши записи:\n\n"
 
     for item in appointments:
+
         text += (
             f"💅 Услуга: {item[0]}\n"
-            f"👩‍🔬 Мастер: {item[1]}\n"
+            f"👩 Мастер: {item[1]}\n"
             f"📅 Дата: {item[2]}\n"
-            f"⏰ Время: {item[3]}\n"
-            f"📌 Статус: {item[4]}\n\n"
+            f"🕒 Время: {item[3]}\n\n"
         )
 
     await message.answer(text)
+
+# ================= PRICE =================
 
 @dp.message(F.text == "💰 Прайс")
 async def price(message: Message):
@@ -343,31 +407,31 @@ async def price(message: Message):
 
     await message.answer(text)
 
+# ================= ADDRESS =================
+
 @dp.message(F.text == "📍 Адрес")
 async def address(message: Message):
 
-    text = (
-        "📍 Наш адрес:\n\n"
-        "г. Алматы\n"
-        "ул. Примерная 25"
+    await message.answer(
+        "📍 Алматы\nул. Примерная 25"
     )
 
-    await message.answer(text)
+# ================= CONTACTS =================
 
 @dp.message(F.text == "📞 Контакты")
 async def contacts(message: Message):
 
-    text = (
-        "📞 Контакты:\n\n"
-        "+7 777 777 77 77\n"
-        "@your_instagram"
+    await message.answer(
+        "📞 +7 777 777 77 77"
     )
 
-    await message.answer(text)
+# ================= ALL APPOINTMENTS =================
 
-# ================= ADMIN FUNCTIONS =================
 @dp.message(F.text == "📋 Все записи")
 async def all_appointments(message: Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
 
     cursor.execute("""
         SELECT service, master, date, time
@@ -385,20 +449,17 @@ async def all_appointments(message: Message):
 
     for app in appointments:
 
-        service = app[0]
-        master = app[1]
-        date = app[2]
-        time = app[3]
-
         text += (
-            f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
-            f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}\n\n"
+            f"💅 {app[0]}\n"
+            f"👩 {app[1]}\n"
+            f"📅 {app[2]}\n"
+            f"🕒 {app[3]}\n\n"
         )
 
     await message.answer(text)
-    
+
+# ================= CLIENTS =================
+
 @dp.message(F.text == "👥 Клиенты")
 async def clients_list(message: Message):
 
@@ -406,10 +467,9 @@ async def clients_list(message: Message):
         return
 
     cursor.execute("""
-    SELECT name, visits, total_paid
-    FROM clients
-    WHERE name != 'AI Учитель Поддержка'
-    ORDER BY id DESC
+        SELECT name, visits, total_paid
+        FROM clients
+        ORDER BY id DESC
     """)
 
     clients = cursor.fetchall()
@@ -421,6 +481,7 @@ async def clients_list(message: Message):
     text = "👥 Клиенты:\n\n"
 
     for client in clients:
+
         text += (
             f"👤 {client[0]}\n"
             f"📅 Визитов: {client[1]}\n"
@@ -428,6 +489,8 @@ async def clients_list(message: Message):
         )
 
     await message.answer(text)
+
+# ================= STATS =================
 
 @dp.message(F.text == "📊 Статистика")
 async def stats(message: Message):
@@ -441,17 +504,13 @@ async def stats(message: Message):
     cursor.execute("SELECT COUNT(*) FROM appointments")
     appointments_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COALESCE(SUM(total_paid),0) FROM clients")
-    total_money = cursor.fetchone()[0]
-
-    text = (
-        "📊 Статистика\n\n"
+    await message.answer(
+        f"📊 Статистика\n\n"
         f"👥 Клиентов: {clients_count}\n"
-        f"📅 Записей: {appointments_count}\n"
-        f"💰 Общая выручка: {total_money}₸"
+        f"📅 Записей: {appointments_count}"
     )
 
-    await message.answer(text)
+# ================= ADD SERVICE =================
 
 @dp.message(F.text == "➕ Добавить услугу")
 async def add_service(message: Message):
@@ -459,13 +518,12 @@ async def add_service(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    text = (
-        "Чтобы добавить услугу,\n"
-        "отправьте так:\n\n"
+    await message.answer(
+        "Отправьте:\n\n"
         "Маникюр,15000,90"
     )
 
-    await message.answer(text)
+# ================= ADD MASTER =================
 
 @dp.message(F.text == "➕ Добавить мастера")
 async def add_master(message: Message):
@@ -473,71 +531,53 @@ async def add_master(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    text = (
-        "Чтобы добавить мастера,\n"
-        "отправьте так:\n\n"
+    await message.answer(
+        "Отправьте:\n\n"
         "Алина,Маникюр"
     )
 
-    await message.answer(text)
-
-@dp.message(F.text == "📢 Рассылка")
-async def mailing(message: Message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    await message.answer(
-        "Отправьте текст для рассылки."
-    )
-
-# ================= AUTO ADD SERVICE =================
+# ================= AUTO ADD =================
 
 @dp.message(F.text.contains(","))
-async def text_handler(message: Message):
+async def auto_add(message: Message):
 
     if message.from_user.id != ADMIN_ID:
         return
 
-    text = message.text
+    parts = message.text.split(",")
 
-    # Добавление услуги
-    if "," in text:
+    # SERVICE
+    if len(parts) == 3:
 
-        parts = text.split(",")
+        title = parts[0]
+        price = int(parts[1])
+        duration = int(parts[2])
 
-        # SERVICE
-        if len(parts) == 3:
+        cursor.execute(
+            """
+            INSERT INTO services (title, price, duration)
+            VALUES (%s, %s, %s)
+            """,
+            (title, price, duration)
+        )
 
-            title = parts[0]
-            price = int(parts[1])
-            duration = int(parts[2])
+        await message.answer("✅ Услуга добавлена")
 
-            cursor.execute(
-                """
-                INSERT INTO services (title, price, duration)
-                VALUES (%s, %s, %s)
-                """,
-                (title, price, duration)
-            )
+    # MASTER
+    elif len(parts) == 2:
 
-            await message.answer("✅ Услуга добавлена")
+        name = parts[0]
+        specialty = parts[1]
 
-        # MASTER
-        elif len(parts) == 2:
+        cursor.execute(
+            """
+            INSERT INTO masters (name, specialty)
+            VALUES (%s, %s)
+            """,
+            (name, specialty)
+        )
 
-            name = parts[0]
-            specialty = parts[1]
-
-            cursor.execute(
-                """
-                INSERT INTO masters (name, specialty)
-                VALUES (%s, %s)
-                """,
-                (name, specialty)
-            )
-
-            await message.answer("✅ Мастер добавлен")
+        await message.answer("✅ Мастер добавлен")
 
 # ================= MAIN =================
 
@@ -549,3 +589,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
