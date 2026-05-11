@@ -197,8 +197,9 @@ async def booking(message: Message):
 
     await message.answer(text)
 
-@dp.message()
+@dp.message(lambda message: "\n" in message.text)
 async def save_booking(message: Message):
+
 
     try:
 
