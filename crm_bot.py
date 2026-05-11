@@ -422,61 +422,71 @@ async def my_appointments(message: Message):
 @dp.message(F.text == "❌ Отменить запись")
 async def cancel_booking(message: Message):
 
-    user_id = message.from_user.id
+    try:
 
-    cursor.execute(
-        """
-        SELECT id
-        FROM clients
-        WHERE tg_id = %s
-        """,
-        (user_id,)
-    )
+        user_id = message.from_user.id
 
-    client = cursor.fetchone()
+        cursor.execute(
+            """
+            SELECT id
+            FROM clients
+            WHERE tg_id = %s
+            """,
+            (user_id,)
+        )
 
-    if not client:
-        await message.answer("У вас нет записей.")
-        return
+        client = cursor.fetchone()
 
-    client_id = client[0]
+        if not client:
+            await message.answer("У вас нет записей.")
+            return
 
-    cursor.execute(
-        """
-        SELECT id, service, date, time
-        FROM appointments
-        WHERE client_id = %s
-        ORDER BY id DESC
-        LIMIT 1
-        """,
-        (client_id,)
-    )
+        client_id = client[0]
 
-    booking = cursor.fetchone()
+        cursor.execute(
+            """
+            SELECT id, service, date, time
+            FROM appointments
+            WHERE client_id = %s
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (client_id,)
+        )
 
-    if not booking:
-        await message.answer("Записей нет.")
-        return
+        booking = cursor.fetchone()
 
-    appointment_id = booking[0]
+        if not booking:
+            await message.answer("Записей нет.")
+            return
 
-    cursor.execute(
-        """
-        DELETE FROM appointments
-        WHERE id = %s
-        """,
-        (appointment_id,)
-    )
+        appointment_id = booking[0]
 
-    conn.commit()
+        # Удаляем запись
+        cursor.execute(
+            """
+            DELETE FROM appointments
+            WHERE id = %s
+            """,
+            (appointment_id,)
+        )
 
-    await message.answer(
-        f"❌ Запись отменена\n\n"
-        f"💅 {booking[1]}\n"
-        f"📅 {booking[2]}\n"
-        f"🕒 {booking[3]}"
-    )
+        conn.commit()
 
+        await message.answer(
+            f"❌ Запись отменена\n\n"
+            f"💅 Услуга: {booking[1]}\n"
+            f"📅 Дата: {booking[2]}\n"
+            f"🕒 Время: {booking[3]}"
+        )
+
+    except Exception as e:
+
+        print("CANCEL ERROR:", e)
+
+        await message.answer(
+            f"❌ Ошибка отмены:\n{e}"
+        )
 @dp.message(F.text == "💰 Прайс")
 async def price(message: Message):
 
