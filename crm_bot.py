@@ -209,29 +209,28 @@ async def save_booking(message: Message):
     master = lines[1].strip()
     date = lines[2].strip()
     time = lines[3].strip()
-
-        cursor.execute(
-            """
-            INSERT INTO appointments
-            (client_id, service, master, date, time)
-            VALUES (%s, %s, %s, %s, %s)
-            """,
-            (
-                message.from_user.id,
-                service,
-                master,
-                date,
-                time
+    
+    cursor.execute(
+        """
+        INSERT INTO appointments
+        (client_id, service, master, date, time)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (
+            message.from_user.id,
+            service,
+            master,
+            date,
+            time
+        )
+    )
+            await message.answer(
+                "✅ Вы успешно записаны!\n\n"
+                f"💅 Услуга: {service}\n"
+                f"👩 Мастер: {master}\n"
+                f"📅 Дата: {date}\n"
+                f"🕒 Время: {time}"
             )
-        )
-
-        await message.answer(
-            "✅ Вы успешно записаны!\n\n"
-            f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
-            f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}"
-        )
 
     except:
         pass
