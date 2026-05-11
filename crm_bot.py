@@ -214,23 +214,43 @@ async def save_booking(message: Message):
         date = lines[2]
         time = lines[3]
 
-        # Меняем 15.00 → 15:00
         time = time.replace(".", ":")
 
         # Получаем клиента
         cursor.execute(
-            "SELECT id, visits FROM clients WHERE tg_id = %s",
+            """
+            SELECT id, visits
+            FROM clients
+            WHERE tg_id = %s
+            """,
             (message.from_user.id,)
         )
 
         client = cursor.fetchone()
 
+        # Если клиента нет — создаем
         if not client:
-            await message.answer("Ошибка клиента.")
-            return
 
-        client_id = client[0]
-        current_visits = client[1]
+            cursor.execute(
+                """
+                INSERT INTO clients (tg_id, name, visits)
+                VALUES (%s, %s, %s)
+                RETURNING id
+                """,
+                (
+                    message.from_user.id,
+                    message.from_user.full_name,
+                    0
+                )
+            )
+
+            client_id = cursor.fetchone()[0]
+            current_visits = 0
+
+        else:
+
+            client_id = client[0]
+            current_visits = client[1]
 
         # Сохраняем запись
         cursor.execute(
@@ -283,7 +303,12 @@ async def save_booking(message: Message):
         )
 
     except Exception as e:
+
         print("BOOKING ERROR:", e)
+
+        await message.answer(
+            f"❌ Ошибка записи:\n{e}"
+        )
         
 @dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
