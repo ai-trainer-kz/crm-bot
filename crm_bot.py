@@ -426,9 +426,10 @@ async def cancel_booking(message: Message):
 
         user_id = message.from_user.id
 
+        # Ищем клиента
         cursor.execute(
             """
-            SELECT id
+            SELECT id, visits
             FROM clients
             WHERE tg_id = %s
             """,
@@ -442,10 +443,12 @@ async def cancel_booking(message: Message):
             return
 
         client_id = client[0]
+        current_visits = client[1]
 
+        # Ищем последнюю запись
         cursor.execute(
             """
-            SELECT id
+            SELECT id, service, master, date, time
             FROM appointments
             WHERE client_id = %s
             ORDER BY id DESC
@@ -457,11 +460,16 @@ async def cancel_booking(message: Message):
         appointment = cursor.fetchone()
 
         if not appointment:
-            await message.answer("❌ Запись не найдена.")
+            await message.answer("❌ Записей не найдено.")
             return
 
         appointment_id = appointment[0]
+        service = appointment[1]
+        master = appointment[2]
+        date = appointment[3]
+        time = appointment[4]
 
+        # Удаляем запись
         cursor.execute(
             """
             DELETE FROM appointments
@@ -470,20 +478,50 @@ async def cancel_booking(message: Message):
             (appointment_id,)
         )
 
+        # Уменьшаем visits
+        if current_visits > 0:
+
+            cursor.execute(
+                """
+                UPDATE clients
+                SET visits = %s
+                WHERE id = %s
+                """,
+                (
+                    current_visits - 1,
+                    client_id
+                )
+            )
+
         conn.commit()
 
-        await bot.send_message(
-            ADMIN_ID,
-            f"❌ Запись отменена!\n\n"
-            f"👤 Клиент: {message.from_user.full_name}\n"
-            f"🆔 ID записи: {appointment_id}"
+        # Сообщение клиенту
+        await message.answer(
+            f"✅ Запись отменена.\n\n"
+            f"💅 Услуга: {service}\n"
+            f"👩 Мастер: {master}\n"
+            f"📅 Дата: {date}\n"
+            f"🕒 Время: {time}"
         )
 
-        await message.answer("✅ Запись отменена.")
+        # Сообщение админу
+        await bot.send_message(
+            ADMIN_ID,
+            f"❌ Клиент отменил запись!\n\n"
+            f"👤 Клиент: {message.from_user.full_name}\n"
+            f"💅 Услуга: {service}\n"
+            f"👩 Мастер: {master}\n"
+            f"📅 Дата: {date}\n"
+            f"🕒 Время: {time}"
+        )
 
     except Exception as e:
+
         print("CANCEL ERROR:", e)
-        await message.answer(f"❌ Ошибка:\n{e}")
+
+        await message.answer(
+            f"❌ Ошибка:\n{e}"
+        )
         
 @dp.message(F.text == "💰 Прайс")
 async def price(message: Message):
