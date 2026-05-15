@@ -1032,11 +1032,11 @@ async def delete_master(message: Message):
             "DELETE FROM masters WHERE name = %s",
             (message.text,)
         )
-    
+
         conn.commit()
-    
+
         await message.answer("✅ Мастер удален")
-    
+
     else:
         await message.answer("❌ Мастер не найден")
 # ================= MAIN =================
