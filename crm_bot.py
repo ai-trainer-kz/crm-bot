@@ -18,7 +18,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 ADMIN_IDS = [
     8398266271,
-    123456789
 ]
 
 # ================= BOT =================
