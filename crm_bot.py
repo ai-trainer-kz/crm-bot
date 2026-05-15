@@ -1068,7 +1068,7 @@ async def show_services(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("SELECT name FROM services")
+    cursor.execute("SELECT title FROM services")
     services = cursor.fetchall()
 
     if not services:
@@ -1091,7 +1091,7 @@ async def show_masters(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("SELECT name, service FROM masters")
+    cursor.execute("SELECT name, specialty FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
