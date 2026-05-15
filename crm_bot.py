@@ -111,8 +111,8 @@ admin_kb = ReplyKeyboardMarkup(
         [
             KeyboardButton(text="➕ Добавить услугу"),
             KeyboardButton(text="➖ Удалить услугу"),
-            KeyboardButton(text="➕ Добавить мастера")
-            KeyboardButton(text="➖ Удалить мастера"),
+            KeyboardButton(text="➕ Добавить мастера"),
+            KeyboardButton(text="➖ Удалить мастера")
         ],
         [
             KeyboardButton(text="📢 Рассылка")
