@@ -32,10 +32,6 @@ conn.autocommit = True
 
 cursor = conn.cursor()
 
-cursor.execute("DELETE FROM services")
-cursor.execute("DELETE FROM masters")
-cursor.execute("DELETE FROM appointments")
-
 # ================= TABLES =================
 
 cursor.execute("""
@@ -114,6 +110,7 @@ admin_kb = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="➕ Добавить услугу"),
+            KeyboardButton(text="➖ Удалить услугу"),
             KeyboardButton(text="➕ Добавить мастера")
         ],
         [
@@ -156,8 +153,6 @@ async def start_cmd(message: Message):
         text,
         reply_markup=client_kb
     )
-
-# ================= ADMIN =================
 
 # ================= ADMIN =================
 
@@ -940,6 +935,54 @@ async def text_handler(message: Message):
 
         await message.answer("✅ Мастер добавлен")
 
+# ================= DELETE SERVICE =================
+
+@dp.message(F.text == "➖ Удалить услугу")
+async def delete_service_menu(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT title FROM services")
+    services = cursor.fetchall()
+
+    if not services:
+        await message.answer("❌ Услуг нет.")
+        return
+
+    text = "Выберите услугу для удаления:\n\n"
+
+    for service in services:
+        text += f"• {service[0]}\n"
+
+    text += "\nОтправьте точное название услуги."
+
+    await message.answer(text)
+
+
+@dp.message()
+async def delete_service(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute(
+        "SELECT * FROM services WHERE title = %s",
+        (message.text,)
+    )
+
+    service = cursor.fetchone()
+
+    if service:
+
+        cursor.execute(
+            "DELETE FROM services WHERE title = %s",
+            (message.text,)
+        )
+
+        conn.commit()
+
+        await message.answer("✅ Услуга удалена")
 
 # ================= MAIN =================
 
