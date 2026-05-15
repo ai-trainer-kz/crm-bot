@@ -112,6 +112,7 @@ admin_kb = ReplyKeyboardMarkup(
             KeyboardButton(text="➕ Добавить услугу"),
             KeyboardButton(text="➖ Удалить услугу"),
             KeyboardButton(text="➕ Добавить мастера")
+            KeyboardButton(text="➖ Удалить мастера"),
         ],
         [
             KeyboardButton(text="📢 Рассылка")
@@ -983,6 +984,55 @@ async def delete_service(message: Message):
         conn.commit()
 
         await message.answer("✅ Услуга удалена")
+
+# ================= DELETE MASTER =================
+
+@dp.message(F.text == "➖ Удалить мастера")
+async def delete_master_menu(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name FROM masters")
+    masters = cursor.fetchall()
+
+    if not masters:
+        await message.answer("❌ Мастеров нет.")
+        return
+
+    text = "Выберите мастера для удаления:\n\n"
+
+    for master in masters:
+        text += f"• {master[0]}\n"
+
+    text += "\nОтправьте точное имя мастера."
+
+    await message.answer(text)
+
+
+@dp.message()
+async def delete_master(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute(
+        "SELECT * FROM masters WHERE name = %s",
+        (message.text,)
+    )
+
+    master = cursor.fetchone()
+
+    if master:
+
+        cursor.execute(
+            "DELETE FROM masters WHERE name = %s",
+            (message.text,)
+        )
+
+        conn.commit()
+
+        await message.answer("✅ Мастер удален")
 
 # ================= MAIN =================
 
