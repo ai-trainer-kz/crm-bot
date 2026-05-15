@@ -372,24 +372,25 @@ async def choose_date(message: Message):
         reply_markup=times_kb
     )
 
-@dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
+# ================= FINAL BOOKING SAVE =================
+
+@dp.message(F.text.startswith("🕐"))
 async def save_booking(message: Message):
 
     try:
 
-        text = message.text.strip()
+        time = message.text.replace("🕐 ", "")
 
-        lines = [line.strip() for line in text.split("\n") if line.strip()]
+        user_id = message.from_user.id
 
-        if len(lines) != 4:
+        if user_id not in user_booking:
             return
 
-        service = lines[0]
-        master = lines[1]
-        date = lines[2]
-        time = lines[3]
+        booking_data = user_booking[user_id]
 
-        time = time.replace(".", ":")
+        service = booking_data["service"]
+        master = booking_data["master"]
+        date = booking_data["date"]
 
         # Получаем клиента
         cursor.execute(
@@ -398,12 +399,11 @@ async def save_booking(message: Message):
             FROM clients
             WHERE tg_id = %s
             """,
-            (message.from_user.id,)
+            (user_id,)
         )
 
         client = cursor.fetchone()
 
-        # Если клиента нет — создаем
         if not client:
 
             cursor.execute(
@@ -413,7 +413,7 @@ async def save_booking(message: Message):
                 RETURNING id
                 """,
                 (
-                    message.from_user.id,
+                    user_id,
                     message.from_user.full_name,
                     0
                 )
@@ -442,15 +442,15 @@ async def save_booking(message: Message):
                 time
             )
         )
-        
+
         busy_slot = cursor.fetchone()
-        
+
         if busy_slot:
-        
+
             await message.answer(
-                "❌ Это время уже занято.\nВыберите другое время."
+                "❌ Это время уже занято."
             )
-        
+
             return
 
         # Сохраняем запись
@@ -484,15 +484,20 @@ async def save_booking(message: Message):
 
         conn.commit()
 
+        # Чистим временные данные
+        del user_booking[user_id]
+
+        # Сообщение клиенту
         await message.answer(
-            f"✅ Вы успешно записаны!\n\n"
+            f"✅ Запись подтверждена!\n\n"
             f"💅 Услуга: {service}\n"
             f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}"
+            f"🕐 Время: {time}",
+            reply_markup=client_kb
         )
 
-        # Уведомление админу
+        # Сообщение админу
         await bot.send_message(
             ADMIN_ID,
             f"📥 Новая запись!\n\n"
@@ -500,7 +505,7 @@ async def save_booking(message: Message):
             f"💅 Услуга: {service}\n"
             f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}"
+            f"🕐 Время: {time}"
         )
 
     except Exception as e:
@@ -508,7 +513,7 @@ async def save_booking(message: Message):
         print("BOOKING ERROR:", e)
 
         await message.answer(
-            f"❌ Ошибка записи:\n{e}"
+            f"❌ Ошибка:\n{e}"
         )
         
 @dp.message(F.text == "💅 Услуги")
