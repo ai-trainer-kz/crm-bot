@@ -995,31 +995,8 @@ async def delete_master_menu(message: Message):
 
 # ================= DELETE MASTER =================
 
-@dp.message(F.text == "➖ Удалить мастера")
-async def delete_master_menu(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT name FROM masters")
-    masters = cursor.fetchall()
-
-    if not masters:
-        await message.answer("❌ Мастеров нет.")
-        return
-
-    text = "Выберите мастера для удаления:\n\n"
-
-    for master in masters:
-        text += f"• {master[0]}\n"
-
-    text += "\nОтправьте точное имя мастера."
-
-    await message.answer(text)
-
-
-@dp.message(F.text == "➖ Удалить мастера")
-async def delete_master_menu(message: Message):
+@dp.message()
+async def delete_master(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
