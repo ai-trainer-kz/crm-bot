@@ -215,6 +215,61 @@ async def booking(message: Message):
         reply_markup=services_kb
     )
 
+# ================= BOOKING STEP 2 =================
+
+user_booking = {}
+
+@dp.message(F.text.startswith("💅"))
+async def choose_service(message: Message):
+
+    service = message.text.replace("💅 ", "")
+
+    user_booking[message.from_user.id] = {
+        "service": service
+    }
+
+    cursor.execute(
+        """
+        SELECT name
+        FROM masters
+        WHERE specialty ILIKE %s
+        """,
+        (f"%{service.split()[0]}%",)
+    )
+
+    masters = cursor.fetchall()
+
+    if not masters:
+
+        await message.answer(
+            "❌ Для этой услуги мастеров пока нет."
+        )
+
+        return
+
+    keyboard = []
+
+    for master in masters:
+
+        keyboard.append(
+            [
+                KeyboardButton(
+                    text=f"👩 {master[0]}"
+                )
+            ]
+        )
+
+    masters_kb = ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+    await message.answer(
+        f"💅 Услуга: {service}\n\n"
+        f"👩 Выберите мастера:",
+        reply_markup=masters_kb
+    )
+
 @dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
 
