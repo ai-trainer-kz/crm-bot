@@ -889,35 +889,35 @@ async def text_handler(message: Message):
         return
 
     text = message.text
+    parts = text.split(",")
 
-    # Добавление услуги
-    if "," in text:
+    # ================= SERVICE =================
 
-        parts = text.split(",")
+    if len(parts) == 3:
 
-        # SERVICE
-        if len(parts) == 3:
+        title = parts[0].strip()
+        price = int(parts[1].strip())
+        duration = int(parts[2].strip())
 
-            title = parts[0]
-            price = int(parts[1])
-            duration = int(parts[2])
+        cursor.execute(
+            """
+            INSERT INTO services (title, price, duration)
+            VALUES (%s, %s, %s)
+            """,
+            (title, price, duration)
+        )
 
-            cursor.execute(
-                """
-                INSERT INTO services (title, price, duration)
-                VALUES (%s, %s, %s)
-                """,
-                (title, price, duration)
-            )
+        conn.commit()
 
-            await message.answer("✅ Услуга добавлена")
+        await message.answer("✅ Услуга добавлена")
 
-    # MASTER
+    # ================= MASTER =================
+
     elif len(parts) == 2:
-    
-        name = parts[0]
-        specialty = parts[1]
-    
+
+        name = parts[0].strip()
+        specialty = parts[1].strip()
+
         cursor.execute(
             """
             INSERT INTO masters (name, specialty)
@@ -927,15 +927,18 @@ async def text_handler(message: Message):
         )
 
         conn.commit()
-    
+
         await message.answer("✅ Мастер добавлен")
 
-# ================= MAIN ================
+
+# ================= MAIN =================
+
 async def main():
 
     print("CRM BOT STARTED")
 
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
