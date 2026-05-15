@@ -692,7 +692,7 @@ async def cancel_booking(message: Message):
         for admin_id in ADMIN_IDS:
             await bot.send_message(
                 admin_id,
-                    f"📥 Новая запись!\n\n"
+                    f"❌ Отмена записи!\n\n"
                     f"👤 Клиент: {message.from_user.full_name}\n"
                     f"💅 Услуга: {service}\n"
                     f"🧑‍🎨 Мастер: {master}\n"
