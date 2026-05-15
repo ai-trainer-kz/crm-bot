@@ -1044,6 +1044,51 @@ async def delete_master(message: Message):
 
     else:
         await message.answer("❌ Мастер не найден")
+
+# ================= SHOW SERVICES =================
+
+@dp.message(F.text == "📋 Услуги")
+async def show_services(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name FROM services")
+    services = cursor.fetchall()
+
+    if not services:
+        await message.answer("❌ Услуг пока нет.")
+        return
+
+    text = "📋 Список услуг:\n\n"
+
+    for service in services:
+        text += f"• {service[0]}\n"
+
+    await message.answer(text)
+
+
+# ================= SHOW MASTERS =================
+
+@dp.message(F.text == "👩‍🎨 Мастера")
+async def show_masters(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name, service FROM masters")
+    masters = cursor.fetchall()
+
+    if not masters:
+        await message.answer("❌ Мастеров пока нет.")
+        return
+
+    text = "👩‍🎨 Список мастеров:\n\n"
+
+    for master in masters:
+        text += f"• {master[0]} — {master[1]}\n"
+
+    await message.answer(text)
 # ================= MAIN =================
 
 async def main():
