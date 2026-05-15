@@ -912,20 +912,20 @@ async def text_handler(message: Message):
 
             await message.answer("✅ Услуга добавлена")
 
-        # MASTER
-        elif len(parts) == 2:
-        
-            name = parts[0]
-            specialty = parts[1]
-        
-            cursor.execute(
-                """
-                INSERT INTO masters (name, specialty)
-                VALUES (%s, %s)
-                """,
-                (name, specialty)
-        )
+    # MASTER
+    elif len(parts) == 2:
     
+        name = parts[0]
+        specialty = parts[1]
+    
+        cursor.execute(
+            """
+            INSERT INTO masters (name, specialty)
+            VALUES (%s, %s)
+            """,
+            (name, specialty)
+        )
+
         conn.commit()
     
         await message.answer("✅ Мастер добавлен")
