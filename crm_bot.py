@@ -762,7 +762,13 @@ async def all_appointments(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("""
+    cursor.execute(
+        """
+        SELECT service, master, date, time
+        FROM appointments
+        ORDER BY id DESC
+        """
+    )
 
     appointments = cursor.fetchall()
 
