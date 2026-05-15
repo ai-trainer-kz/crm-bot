@@ -914,19 +914,21 @@ async def text_handler(message: Message):
 
         # MASTER
         elif len(parts) == 2:
-
+        
             name = parts[0]
             specialty = parts[1]
-
+        
             cursor.execute(
                 """
                 INSERT INTO masters (name, specialty)
                 VALUES (%s, %s)
                 """,
                 (name, specialty)
-            )
-
-            await message.answer("✅ Мастер добавлен")
+        )
+    
+        conn.commit()
+    
+        await message.answer("✅ Мастер добавлен")
 
 # ================= MAIN ================
 async def main():
