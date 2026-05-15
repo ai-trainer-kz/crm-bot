@@ -181,21 +181,39 @@ async def admin_panel(message: Message):
 @dp.message(F.text == "📅 Записаться")
 async def booking(message: Message):
 
-    text = (
-    "📅 Онлайн запись\n\n"
-    "Отправьте:\n\n"
-    "1. Услугу\n"
-    "2. Мастера\n"
-    "3. Дату\n"
-    "4. Время\n\n"
-    "Пример:\n\n"
-    "Стрижка\n"
-    "Мадина\n"
-    "12.05\n"
-    "13:00"
-)
+    cursor.execute(
+        "SELECT title FROM services"
+    )
 
-    await message.answer(text)
+    services = cursor.fetchall()
+
+    if not services:
+        await message.answer(
+            "❌ Услуги пока не добавлены."
+        )
+        return
+
+    keyboard = []
+
+    for service in services:
+
+        keyboard.append(
+            [
+                KeyboardButton(
+                    text=f"💅 {service[0]}"
+                )
+            ]
+        )
+
+    services_kb = ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+    await message.answer(
+        "💅 Выберите услугу:",
+        reply_markup=services_kb
+    )
 
 @dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
