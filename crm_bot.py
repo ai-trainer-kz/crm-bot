@@ -32,9 +32,6 @@ conn.autocommit = True
 
 cursor = conn.cursor()
 
-cursor.execute("DELETE FROM services")
-cursor.execute("DELETE FROM masters")
-
 # ================= TABLES =================
 
 cursor.execute("""
