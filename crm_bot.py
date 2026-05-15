@@ -270,6 +270,42 @@ async def choose_service(message: Message):
         reply_markup=masters_kb
     )
 
+# ================= BOOKING STEP 3 =================
+
+@dp.message(F.text.startswith("👩"))
+async def choose_master(message: Message):
+
+    master = message.text.replace("👩 ", "")
+
+    if message.from_user.id not in user_booking:
+        return
+
+    user_booking[message.from_user.id]["master"] = master
+
+    dates_kb = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📅 Сегодня")
+            ],
+            [
+                KeyboardButton(text="📅 Завтра")
+            ],
+            [
+                KeyboardButton(text="📅 17 мая")
+            ],
+            [
+                KeyboardButton(text="📅 18 мая")
+            ]
+        ],
+        resize_keyboard=True
+    )
+
+    await message.answer(
+        f"👩 Мастер: {master}\n\n"
+        f"📅 Выберите дату:",
+        reply_markup=dates_kb
+    )
+
 @dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
 
