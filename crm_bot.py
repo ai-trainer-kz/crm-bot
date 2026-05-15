@@ -994,10 +994,13 @@ async def delete_service(message: Message):
         await message.answer("✅ Услуга удалена")
 
 # ================= DELETE MASTER =================
-@dp.message(F.text & ~F.text.in_(["Услуги", "Мастера"]))
-async def delete_service(message: Message):
-    
+@dp.message()
+async def delete_master(message: Message):
+
     if message.from_user.id not in ADMIN_IDS:
+        return
+
+    if message.text.startswith("➖") or message.text in ["Услуги", "Мастера"]:
         return
 
     cursor.execute("SELECT name FROM masters")
