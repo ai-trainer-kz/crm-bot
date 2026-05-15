@@ -107,8 +107,8 @@ admin_kb = ReplyKeyboardMarkup(
         ],
 
         [
-            KeyboardButton(text="📋 Услуги"),
-            KeyboardButton(text="👩‍🎨 Мастера")
+            KeyboardButton(text="Услуги"),
+            KeyboardButton(text="Мастера")
         ],
         
         [
@@ -1047,7 +1047,7 @@ async def delete_master(message: Message):
 
 # ================= SHOW SERVICES =================
 
-@dp.message(F.text == "📋 Услуги")
+@dp.message(F.text == "Услуги")
 async def show_services(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
@@ -1060,7 +1060,7 @@ async def show_services(message: Message):
         await message.answer("❌ Услуг пока нет.")
         return
 
-    text = "📋 Список услуг:\n\n"
+    text = " Список услуг:\n\n"
 
     for service in services:
         text += f"• {service[0]}\n"
@@ -1070,7 +1070,7 @@ async def show_services(message: Message):
 
 # ================= SHOW MASTERS =================
 
-@dp.message(F.text == "👩‍🎨 Мастера")
+@dp.message(F.text == "Мастера")
 async def show_masters(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
@@ -1083,7 +1083,7 @@ async def show_masters(message: Message):
         await message.answer("❌ Мастеров пока нет.")
         return
 
-    text = "👩‍🎨 Список мастеров:\n\n"
+    text = " Список мастеров:\n\n"
 
     for master in masters:
         text += f"• {master[0]} — {master[1]}\n"
