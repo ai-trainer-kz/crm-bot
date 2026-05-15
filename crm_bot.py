@@ -969,8 +969,8 @@ async def delete_service_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message()
-async def delete_service(message: Message):
+@dp.message(F.text == "➖ Удалить мастера")
+async def delete_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
@@ -1018,8 +1018,8 @@ async def delete_master_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message()
-async def delete_master(message: Message):
+@dp.message(F.text == "➖ Удалить мастера")
+async def delete_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
