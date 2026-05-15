@@ -156,10 +156,12 @@ async def start_cmd(message: Message):
 
 # ================= ADMIN =================
 
+# ================= ADMIN =================
+
 @dp.message(Command("admin"))
 async def admin_panel(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     cursor.execute("SELECT COUNT(*) FROM clients")
@@ -178,7 +180,6 @@ async def admin_panel(message: Message):
         text,
         reply_markup=admin_kb
     )
-
 # ================= CLIENT MENU =================
 
 @dp.message(F.text == "📅 Записаться")
@@ -785,7 +786,7 @@ async def all_appointments(message: Message):
 @dp.message(F.text == "👥 Клиенты")
 async def clients_list(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     cursor.execute("""
@@ -815,7 +816,7 @@ async def clients_list(message: Message):
 @dp.message(F.text == "📊 Статистика")
 async def stats(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     cursor.execute("SELECT COUNT(*) FROM clients")
@@ -839,7 +840,7 @@ async def stats(message: Message):
 @dp.message(F.text == "➕ Добавить услугу")
 async def add_service(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     text = (
@@ -853,7 +854,7 @@ async def add_service(message: Message):
 @dp.message(F.text == "➕ Добавить мастера")
 async def add_master(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     text = (
@@ -867,7 +868,7 @@ async def add_master(message: Message):
 @dp.message(F.text == "📢 Рассылка")
 async def mailing(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     await message.answer(
@@ -879,7 +880,7 @@ async def mailing(message: Message):
 @dp.message(F.text.contains(","))
 async def text_handler(message: Message):
 
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
     text = message.text
