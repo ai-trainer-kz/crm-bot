@@ -995,7 +995,7 @@ async def delete_master_menu(message: Message):
 
 # ================= DELETE MASTER =================
 
-@dp.message()
+@dp.message(F.text & ~F.text.in_(["Услуги", "Мастера", "➖ Удалить мастера"]))
 async def delete_master(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
