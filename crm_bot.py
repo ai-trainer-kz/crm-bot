@@ -311,7 +311,14 @@ async def choose_master(message: Message):
 
 # ================= BOOKING STEP 4 =================
 
-@dp.message(F.text.startswith("📅"))
+@dp.message(
+    F.text.in_([
+        "📅 Сегодня",
+        "📅 Завтра",
+        "📅 17 мая",
+        "📅 18 мая"
+    ])
+)
 async def choose_date(message: Message):
 
     date = message.text.replace("📅 ", "")
@@ -752,11 +759,10 @@ async def contacts(message: Message):
 @dp.message(F.text == "📋 Все записи")
 async def all_appointments(message: Message):
 
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
     cursor.execute("""
-        SELECT service, master, date, time
-        FROM appointments
-        ORDER BY id DESC
-    """)
 
     appointments = cursor.fetchall()
 
