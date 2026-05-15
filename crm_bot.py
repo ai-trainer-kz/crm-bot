@@ -994,10 +994,9 @@ async def delete_service(message: Message):
         await message.answer("✅ Услуга удалена")
 
 # ================= DELETE MASTER =================
-
-@dp.message(F.text == "➖ Удалить мастера")
-async def delete_master_menu(message: Message):
-
+@dp.message(F.text & ~F.text.in_(["Услуги", "Мастера"]))
+async def delete_service(message: Message):
+    
     if message.from_user.id not in ADMIN_IDS:
         return
 
