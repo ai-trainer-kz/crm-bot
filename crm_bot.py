@@ -306,6 +306,72 @@ async def choose_master(message: Message):
         reply_markup=dates_kb
     )
 
+# ================= BOOKING STEP 4 =================
+
+@dp.message(F.text.startswith("📅"))
+async def choose_date(message: Message):
+
+    date = message.text.replace("📅 ", "")
+
+    if message.from_user.id not in user_booking:
+        return
+
+    user_booking[message.from_user.id]["date"] = date
+
+    master = user_booking[message.from_user.id]["master"]
+
+    all_times = [
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00"
+    ]
+
+    # занятые слоты
+    cursor.execute(
+        """
+        SELECT time
+        FROM appointments
+        WHERE master = %s
+        AND date = %s
+        """,
+        (master, date)
+    )
+
+    busy_times = cursor.fetchall()
+
+    busy_list = [x[0] for x in busy_times]
+
+    keyboard = []
+
+    for time in all_times:
+
+        if time not in busy_list:
+
+            keyboard.append(
+                [
+                    KeyboardButton(
+                        text=f"🕐 {time}"
+                    )
+                ]
+            )
+
+    times_kb = ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+    await message.answer(
+        f"📅 Дата: {date}\n\n"
+        f"🕐 Выберите время:",
+        reply_markup=times_kb
+    )
+
 @dp.message(F.text.regexp(r".+\n.+\n.+\n.+"))
 async def save_booking(message: Message):
 
