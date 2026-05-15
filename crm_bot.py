@@ -16,7 +16,10 @@ import psycopg2
 TOKEN = os.getenv("TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-ADMIN_ID = 8398266271
+ADMIN_IDS = [
+    8398266271,
+    503301815
+]
 
 # ================= BOT =================
 
@@ -497,16 +500,17 @@ async def save_booking(message: Message):
             reply_markup=client_kb
         )
 
-        # Сообщение админу
+    # Сообщение админу
+    for admin_id in ADMIN_IDS:
         await bot.send_message(
-            ADMIN_ID,
-            f"📥 Новая запись!\n\n"
-            f"👤 Клиент: {message.from_user.full_name}\n"
-            f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
-            f"📅 Дата: {date}\n"
-            f"🕐 Время: {time}"
-        )
+            admin_id,
+                f"📥 Новая запись!\n\n"
+                f"👤 Клиент: {message.from_user.full_name}\n"
+                f"💅 Услуга: {service}\n"
+                f"🧑‍🎨 Мастер: {master}\n"
+                f"📅 Дата: {date}\n"
+                f"🕒 Время: {time}"
+            )
 
     except Exception as e:
 
@@ -685,15 +689,16 @@ async def cancel_booking(message: Message):
         )
 
         # Сообщение админу
-        await bot.send_message(
-            ADMIN_ID,
-            f"❌ Клиент отменил запись!\n\n"
-            f"👤 Клиент: {message.from_user.full_name}\n"
-            f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
-            f"📅 Дата: {date}\n"
-            f"🕒 Время: {time}"
-        )
+        for admin_id in ADMIN_IDS:
+            await bot.send_message(
+                admin_id,
+                    f"📥 Новая запись!\n\n"
+                    f"👤 Клиент: {message.from_user.full_name}\n"
+                    f"💅 Услуга: {service}\n"
+                    f"🧑‍🎨 Мастер: {master}\n"
+                    f"📅 Дата: {date}\n"
+                    f"🕒 Время: {time}"
+                )
 
     except Exception as e:
 
