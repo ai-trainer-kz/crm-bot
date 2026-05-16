@@ -556,7 +556,7 @@ async def services(message: Message):
 @dp.message(F.text == "👩‍🔬 Мастера")
 async def masters(message: Message):
 
-    cursor.execute("SELECT name, service FROM masters")
+    cursor.execute("SELECT name, specialty FROM masters")
 
     masters_list = cursor.fetchall()
 
@@ -1084,7 +1084,7 @@ async def show_masters(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("SELECT name, service FROM masters")
+    cursor.execute("SELECT name, specialty FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
