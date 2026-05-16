@@ -1019,26 +1019,21 @@ async def delete_master_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message(F.text & ~F.text.in_(["Услуги", "Мастера", "➖ Удалить мастера"]))
+@dp.message(F.text & ~F.text.in_([
+    "Услуги",
+    "Мастера",
+    "➖ Удалить мастера",
+    "➖ Удалить услугу",
+    "➕ Добавить мастера",
+    "➕ Добавить услугу",
+    "📋 Все записи",
+    "👥 Клиенты",
+    "📊 Статистика",
+    "📢 Рассылка"
+]))
 async def delete_master(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
-        return
-
-    ignore_buttons = [
-        "Услуги",
-        "Мастера",
-        "📋 Все записи",
-        "👥 Клиенты",
-        "📊 Статистика",
-        "📢 Рассылка",
-        "➕ Добавить услугу",
-        "➖ Удалить услугу",
-        "➕ Добавить мастера",
-        "➖ Удалить мастера"
-    ]
-
-    if message.text in ignore_buttons:
         return
 
     cursor.execute(
@@ -1058,9 +1053,6 @@ async def delete_master(message: Message):
         conn.commit()
 
         await message.answer("✅ Мастер удален")
-
-    else:
-        await message.answer("❌ Мастер не найден")
 # ================= SHOW SERVICES =================
 
 @dp.message(F.text == "Услуги")
