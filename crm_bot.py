@@ -107,7 +107,7 @@ admin_kb = ReplyKeyboardMarkup(
         ],
 
         [
-            KeyboardButton(text="📋 Услуги")
+            KeyboardButton(text="📋 Услуги"),
             KeyboardButton(text="👨‍💼 Мастера")
         ],
         
