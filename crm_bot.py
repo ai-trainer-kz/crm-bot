@@ -84,7 +84,7 @@ client_kb = ReplyKeyboardMarkup(
             KeyboardButton(text="📅 Записаться")
         ],
         [
-            KeyboardButton(text="📋 Услуги")
+            KeyboardButton(text="📋 Услуги"),
             KeyboardButton(text="👩‍🔬 Мастера")
         ],
         [
