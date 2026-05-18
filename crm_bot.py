@@ -1015,6 +1015,8 @@ async def delete_master_menu(message: Message):
         await message.answer("❌ Мастеров нет.")
         return
 
+    waiting_delete_master.add(message.from_user.id)
+
     text = "Выберите мастера для удаления:\n\n"
 
     for master in masters:
@@ -1024,20 +1026,41 @@ async def delete_master_menu(message: Message):
 
     await message.answer(text)
 
-
-@dp.message(F.text & ~F.text.in_([
-    "Услуги",
-    "Мастера",
-    "➖ Удалить мастера",
-    "➖ Удалить услугу",
-    "➕ Добавить мастера",
-    "➕ Добавить услугу",
-    "📋 Все записи",
-    "👥 Клиенты",
-    "📊 Статистика",
-    "📢 Рассылка"
-]))
+@dp.message()
 async def delete_master(message: Message):
+
+    if message.from_user.id not in waiting_delete_master:
+        return
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    master_name = message.text.strip()
+
+    cursor.execute(
+        "SELECT * FROM masters WHERE name = %s",
+        (master_name,)
+    )
+
+    master = cursor.fetchone()
+
+    if not master:
+
+        waiting_delete_master.remove(message.from_user.id)
+
+        await message.answer("❌ Мастер не найден")
+        return
+
+    cursor.execute(
+        "DELETE FROM masters WHERE name = %s",
+        (master_name,)
+    )
+
+    conn.commit()
+
+    waiting_delete_master.remove(message.from_user.id)
+
+    await message.answer("✅ Мастер удален")
 
     if message.from_user.id not in ADMIN_IDS:
         return
