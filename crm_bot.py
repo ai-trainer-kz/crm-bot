@@ -107,8 +107,8 @@ admin_kb = ReplyKeyboardMarkup(
         ],
 
         [
-            KeyboardButton(text="Услуги"),
-            KeyboardButton(text="Мастера")
+            KeyboardButton(text="📋 Услуги")
+            KeyboardButton(text="👨‍💼 Мастера")
         ],
         
         [
@@ -527,8 +527,8 @@ async def save_booking(message: Message):
                 admin_id,
                     f"📥 Новая запись!\n\n"
                     f"👤 Клиент: {message.from_user.full_name}\n"
-                    f"💅 Услуга: {service}\n"
-                    f"👩 Мастер: {master}\n"
+                    f"📋 Услуга: {service}\n"
+                    f"👨‍💼 Мастер: {master}\n"
                     f"📅 Дата: {date}\n"
                     f"🕒 Время: {time}"
                 )
@@ -715,8 +715,8 @@ async def cancel_booking(message: Message):
                 admin_id,
                     f"❌ Отмена записи!\n\n"
                     f"👤 Клиент: {message.from_user.full_name}\n"
-                    f"💅 Услуга: {service}\n"
-                    f"👩 Мастер: {master}\n"
+                    f"📋 Услуга: {service}\n"
+                    f"👨‍💼 Мастер: {master}\n"
                     f"📅 Дата: {date}\n"
                     f"🕒 Время: {time}"
                 )
@@ -801,7 +801,7 @@ async def all_appointments(message: Message):
 
         text += (
             f"💅 Услуга: {service}\n"
-            f"👩 Мастер: {master}\n"
+            f"👨‍💼 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
             f"🕒 Время: {time}\n\n"
         )
@@ -1101,7 +1101,7 @@ async def delete_master(message: Message):
 
 # ================= SHOW SERVICES =================
 
-@dp.message(F.text == "Услуги")
+@dp.message(F.text == "📋 Услуги")
 async def show_services(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
@@ -1124,7 +1124,7 @@ async def show_services(message: Message):
 
 # ================= SHOW MASTERS =================
 
-@dp.message(F.text == "Мастера")
+@dp.message(F.text == "👨‍💼 Мастера")
 async def show_masters(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
