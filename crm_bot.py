@@ -230,7 +230,7 @@ async def booking(message: Message):
 
 user_booking = {}
 
-@dp.message(F.text == "📋 Услуги")
+@dp.message(F.text.startswith("💅 "))
 async def choose_service(message: Message):
 
     service = message.text.replace("💅 ", "")
@@ -283,9 +283,9 @@ async def choose_service(message: Message):
 
 # ================= BOOKING STEP 3 =================
 
-@dp.message(F.text.startswith("👩"))
+@dp.message(F.text.startswith("👩 "))
 async def choose_master(message: Message):
-
+    
     master = message.text.replace("👩 ", "")
 
     if message.from_user.id not in user_booking:
