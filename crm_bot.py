@@ -85,7 +85,7 @@ client_kb = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="💅 Услуги"),
-            KeyboardButton(text="👩‍🔬 Мастера")
+            KeyboardButton(text="👩 Мастера")
         ],
         [
             KeyboardButton(text="🕒 Мои записи"),
@@ -230,7 +230,10 @@ async def booking(message: Message):
 
 user_booking = {}
 
-@dp.message(F.text.startswith("💅"))
+@dp.message(
+    F.text.startswith("💅 ")
+    & (F.text != "💅 Услуги")
+)
 async def choose_service(message: Message):
 
     service = message.text.replace("💅 ", "")
@@ -245,7 +248,7 @@ async def choose_service(message: Message):
         FROM masters
         WHERE specialty ILIKE %s
         """,
-        (f"%{service.split()[0]}%",)
+        (f"%{service}%",)
     )
 
     masters = cursor.fetchall()
@@ -283,7 +286,10 @@ async def choose_service(message: Message):
 
 # ================= BOOKING STEP 3 =================
 
-@dp.message(F.text.startswith("👩"))
+@dp.message(
+    F.text.startswith("👩 ")
+    & (F.text != "👩 Мастера")
+)
 async def choose_master(message: Message):
 
     master = message.text.replace("👩 ", "")
@@ -522,7 +528,7 @@ async def save_booking(message: Message):
                     f"📥 Новая запись!\n\n"
                     f"👤 Клиент: {message.from_user.full_name}\n"
                     f"💅 Услуга: {service}\n"
-                    f"🧑‍🎨 Мастер: {master}\n"
+                    f"👩 Мастер: {master}\n"
                     f"📅 Дата: {date}\n"
                     f"🕒 Время: {time}"
                 )
@@ -553,7 +559,7 @@ async def services(message: Message):
 
     await message.answer(text)
 
-@dp.message(F.text == "👩‍🔬 Мастера")
+@dp.message(F.text == "👩 Мастера")
 async def masters(message: Message):
 
     cursor.execute("SELECT name, specialty FROM masters")
@@ -564,7 +570,7 @@ async def masters(message: Message):
         await message.answer("Мастера пока не добавлены.")
         return
 
-    text = "👩‍🔬 Наши мастера:\n\n"
+    text = "👩 Наши мастера:\n\n"
 
     for master in masters_list:
         text += f"• {master[0]} — {master[1]}\n"
@@ -610,7 +616,7 @@ async def my_appointments(message: Message):
     for item in appointments:
         text += (
             f"💅 Услуга: {item[0]}\n"
-            f"👩‍🔬 Мастер: {item[1]}\n"
+            f"👩 Мастер: {item[1]}\n"
             f"📅 Дата: {item[2]}\n"
             f"⏰ Время: {item[3]}\n"
             f"📌 Статус: {item[4]}\n\n"
@@ -710,7 +716,7 @@ async def cancel_booking(message: Message):
                     f"❌ Отмена записи!\n\n"
                     f"👤 Клиент: {message.from_user.full_name}\n"
                     f"💅 Услуга: {service}\n"
-                    f"🧑‍🎨 Мастер: {master}\n"
+                    f"👩 Мастер: {master}\n"
                     f"📅 Дата: {date}\n"
                     f"🕒 Время: {time}"
                 )
