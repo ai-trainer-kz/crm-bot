@@ -999,7 +999,9 @@ async def delete_service_menu(message: Message):
     if not services:
         await message.answer("❌ Услуг нет.")
         return
-
+    
+    waiting_delete_service.add(message.from_user.id)
+    
     text = "Выберите услугу для удаления:\n\n"
 
     for service in services:
@@ -1009,31 +1011,41 @@ async def delete_service_menu(message: Message):
 
     await message.answer(text)
 
-
-@dp.message(F.text & ~F.text.in_(["Услуги", "Мастера", "➖ Удалить услугу"]))
+@dp.message(F.text)
 async def delete_service(message: Message):
+
+    if message.from_user.id not in waiting_delete_service:
+        return
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
+    service_name = message.text.strip()
+
     cursor.execute(
         "SELECT * FROM services WHERE title = %s",
-        (message.text,)
+        (service_name,)
     )
 
     service = cursor.fetchone()
 
-    if service:
+    if not service:
 
-        cursor.execute(
-            "DELETE FROM services WHERE title = %s",
-            (message.text,)
-        )
+        waiting_delete_service.remove(message.from_user.id)
 
-        conn.commit()
+        await message.answer("❌ Услуга не найдена")
+        return
 
-        await message.answer("✅ Услуга удалена")
+    cursor.execute(
+        "DELETE FROM services WHERE title = %s",
+        (service_name,)
+    )
 
+    conn.commit()
+
+    waiting_delete_service.remove(message.from_user.id)
+
+    await message.answer("✅ Услуга удалена")
 
 # ================= DELETE MASTER =================
 
@@ -1061,9 +1073,7 @@ async def delete_master_menu(message: Message):
 
     await message.answer(text)
 
-@dp.message(
-    F.text,
-)
+@dp.message(F.text)
 async def delete_master(message: Message):
 
     if message.from_user.id not in waiting_delete_master:
@@ -1101,7 +1111,7 @@ async def delete_master(message: Message):
 
 # ================= SHOW SERVICES =================
 
-@dp.message(F.text == "📋 Услуги")
+@dp.message(F.text == "💅 Услуги")
 async def show_services(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
@@ -1124,7 +1134,7 @@ async def show_services(message: Message):
 
 # ================= SHOW MASTERS =================
 
-@dp.message(F.text == "👨‍💼 Мастера")
+@dp.message(F.text == "👱‍♀️ Мастера")
 async def show_masters(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
