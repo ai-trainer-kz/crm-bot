@@ -28,6 +28,7 @@ dp = Dispatcher()
 waiting_add_master = set()
 waiting_delete_master = set()
 waiting_delete_service = set()
+waiting_add_service = set()
 
 # ================= DATABASE =================
 
@@ -235,16 +236,63 @@ async def show_masters(message: Message):
 
     await message.answer(text)
 
-# ================= AUTO ADD SERVICE =================
+# ================= ADD SERVICE PROCESS =================
 
-@dp.message(F.text.contains(","))
-async def text_handler(message: Message):
+waiting_add_service = set()
+
+@dp.message(F.text == "➕ Добавить услугу")
+async def add_service(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    text = message.text
-    parts = text.split(",")
+    waiting_add_service.add(message.from_user.id)
+
+    text = (
+        "Чтобы добавить услугу:\n\n"
+        "отправьте так:\n\n"
+        "Маникюр,15000,90"
+    )
+
+    await message.answer(text)
+
+
+@dp.message(F.text)
+async def process_add_service(message: Message):
+
+    if message.from_user.id not in waiting_add_service:
+        return
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    try:
+
+        title, price, duration = message.text.split(",")
+
+        title = title.strip()
+        price = int(price.strip())
+        duration = int(duration.strip())
+
+        cursor.execute(
+            """
+            INSERT INTO services (title, price, duration)
+            VALUES (%s, %s, %s)
+            """,
+            (title, price, duration)
+        )
+
+        conn.commit()
+
+        waiting_add_service.remove(message.from_user.id)
+
+        await message.answer("✅ Услуга добавлена")
+
+    except:
+
+        await message.answer(
+            "❌ Ошибка.\n\nПример:\nМаникюр,15000,90"
+        )
 
 # ================= DELETE SERVICE =================
 
