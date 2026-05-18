@@ -256,43 +256,78 @@ async def add_service(message: Message):
 
     await message.answer(text)
 
-
-@dp.message(F.text)
+@dp.message(F.text.contains(","))
 async def process_add_service(message: Message):
-
-    if message.from_user.id not in waiting_add_service:
-        return
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    try:
+    parts = message.text.split(",")
 
-        title, price, duration = message.text.split(",")
+    # ===== ДОБАВЛЕНИЕ УСЛУГИ =====
 
-        title = title.strip()
-        price = int(price.strip())
-        duration = int(duration.strip())
+    if (
+        message.from_user.id in waiting_add_service
+        and len(parts) == 3
+    ):
 
-        cursor.execute(
-            """
-            INSERT INTO services (title, price, duration)
-            VALUES (%s, %s, %s)
-            """,
-            (title, price, duration)
-        )
+        try:
 
-        conn.commit()
+            title = parts[0].strip()
+            price = int(parts[1].strip())
+            duration = int(parts[2].strip())
 
-        waiting_add_service.remove(message.from_user.id)
+            cursor.execute(
+                """
+                INSERT INTO services (title, price, duration)
+                VALUES (%s, %s, %s)
+                """,
+                (title, price, duration)
+            )
 
-        await message.answer("✅ Услуга добавлена")
+            conn.commit()
 
-    except:
+            waiting_add_service.remove(message.from_user.id)
 
-        await message.answer(
-            "❌ Ошибка.\n\nПример:\nМаникюр,15000,90"
-        )
+            await message.answer("✅ Услуга добавлена")
+
+        except:
+
+            await message.answer(
+                "❌ Пример:\nМаникюр,15000,90"
+            )
+
+    # ===== ДОБАВЛЕНИЕ МАСТЕРА =====
+
+    elif (
+        message.from_user.id in waiting_add_master
+        and len(parts) == 2
+    ):
+
+        try:
+
+            name = parts[0].strip()
+            specialty = parts[1].strip()
+
+            cursor.execute(
+                """
+                INSERT INTO masters (name, specialty)
+                VALUES (%s, %s)
+                """,
+                (name, specialty)
+            )
+
+            conn.commit()
+
+            waiting_add_master.remove(message.from_user.id)
+
+            await message.answer("✅ Мастер добавлен")
+
+        except:
+
+            await message.answer(
+                "❌ Пример:\nАлина,Маникюр"
+            )
 
 # ================= DELETE SERVICE =================
 
