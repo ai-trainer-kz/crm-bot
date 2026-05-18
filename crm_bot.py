@@ -236,98 +236,65 @@ async def show_masters(message: Message):
 
     await message.answer(text)
 
-# ================= ADD SERVICE PROCESS =================
-
-waiting_add_service = set()
-
-@dp.message(F.text == "➕ Добавить услугу")
-async def add_service(message: Message):
+# ================= ADD MASTER =================
+@dp.message(F.text == "➕ Добавить мастера")
+async def add_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    waiting_add_service.add(message.from_user.id)
+    waiting_add_master.add(message.from_user.id)
 
     text = (
-        "Чтобы добавить услугу:\n\n"
+        "Чтобы добавить мастера:\n\n"
         "отправьте так:\n\n"
-        "Маникюр,15000,90"
+        "Алина,Маникюр"
     )
 
     await message.answer(text)
 
-@dp.message(F.text.contains(","))
-async def process_add_service(message: Message):
+@dp.message(F.text)
+async def process_add_master(message: Message):
+
+    if message.from_user.id not in waiting_add_master:
+        return
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    parts = message.text.split(",")
+    try:
 
-    # ===== ДОБАВЛЕНИЕ УСЛУГИ =====
+        name, specialty = message.text.split(",", 1)
 
-    if (
-        message.from_user.id in waiting_add_service
-        and len(parts) == 3
-    ):
+        name = name.strip()
+        specialty = specialty.strip()
 
-        try:
+        cursor.execute(
+            "INSERT INTO masters (name, specialty) VALUES (%s, %s)",
+            (name, specialty)
+        )
 
-            title = parts[0].strip()
-            price = int(parts[1].strip())
-            duration = int(parts[2].strip())
+        conn.commit()
 
-            cursor.execute(
-                """
-                INSERT INTO services (title, price, duration)
-                VALUES (%s, %s, %s)
-                """,
-                (title, price, duration)
-            )
+        waiting_add_master.remove(message.from_user.id)
 
-            conn.commit()
+        await message.answer("✅ Мастер добавлен")
 
-            waiting_add_service.remove(message.from_user.id)
+    except:
 
-            await message.answer("✅ Услуга добавлена")
+        await message.answer(
+            "❌ Ошибка.\n\nПример:\nАлина,Маникюр"
+        )
 
-        except:
+@dp.message(F.text == "📢 Рассылка")
+async def mailing(message: Message):
 
-            await message.answer(
-                "❌ Пример:\nМаникюр,15000,90"
-            )
+    if message.from_user.id not in ADMIN_IDS:
+        return
 
-    # ===== ДОБАВЛЕНИЕ МАСТЕРА =====
-
-    elif (
-        message.from_user.id in waiting_add_master
-        and len(parts) == 2
-    ):
-
-        try:
-
-            name = parts[0].strip()
-            specialty = parts[1].strip()
-
-            cursor.execute(
-                """
-                INSERT INTO masters (name, specialty)
-                VALUES (%s, %s)
-                """,
-                (name, specialty)
-            )
-
-            conn.commit()
-
-            waiting_add_master.remove(message.from_user.id)
-
-            await message.answer("✅ Мастер добавлен")
-
-        except:
-
-            await message.answer(
-                "❌ Пример:\nАлина,Маникюр"
-            )
+    await message.answer(
+        "Отправьте текст для рассылки."
+    )
 
 # ================= DELETE SERVICE =================
 
@@ -1128,6 +1095,10 @@ async def stats(message: Message):
     )
 
     await message.answer(text)
+    
+# ================= ADD SERVICE PROCESS =================
+
+waiting_add_service = set()
 
 @dp.message(F.text == "➕ Добавить услугу")
 async def add_service(message: Message):
@@ -1135,72 +1106,57 @@ async def add_service(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
+    waiting_add_service.add(message.from_user.id)
+
     text = (
-        "Чтобы добавить услугу,\n"
+        "Чтобы добавить услугу:\n\n"
         "отправьте так:\n\n"
         "Маникюр,15000,90"
     )
 
     await message.answer(text)
 
-@dp.message(F.text == "➕ Добавить мастера")
-async def add_master_menu(message: Message):
+@dp.message(F.text.contains(","))
+async def process_add_service(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    waiting_add_master.add(message.from_user.id)
+    parts = message.text.split(",")
 
-    text = (
-        "Чтобы добавить мастера:\n\n"
-        "отправьте так:\n\n"
-        "Алина,Маникюр"
-    )
+    # ===== ДОБАВЛЕНИЕ УСЛУГИ =====
 
-    await message.answer(text)
+    if (
+        message.from_user.id in waiting_add_service
+        and len(parts) == 3
+    ):
 
-@dp.message(F.text)
-async def process_add_master(message: Message):
+        try:
 
-    if message.from_user.id not in waiting_add_master:
-        return
+            title = parts[0].strip()
+            price = int(parts[1].strip())
+            duration = int(parts[2].strip())
 
-    if message.from_user.id not in ADMIN_IDS:
-        return
+            cursor.execute(
+                """
+                INSERT INTO services (title, price, duration)
+                VALUES (%s, %s, %s)
+                """,
+                (title, price, duration)
+            )
 
-    try:
+            conn.commit()
 
-        name, specialty = message.text.split(",", 1)
+            waiting_add_service.remove(message.from_user.id)
 
-        name = name.strip()
-        specialty = specialty.strip()
+            await message.answer("✅ Услуга добавлена")
 
-        cursor.execute(
-            "INSERT INTO masters (name, specialty) VALUES (%s, %s)",
-            (name, specialty)
-        )
+        except:
 
-        conn.commit()
+            await message.answer(
+                "❌ Пример:\nМаникюр,15000,90"
+            )
 
-        waiting_add_master.remove(message.from_user.id)
-
-        await message.answer("✅ Мастер добавлен")
-
-    except:
-
-        await message.answer(
-            "❌ Ошибка.\n\nПример:\nАлина,Маникюр"
-        )
-
-@dp.message(F.text == "📢 Рассылка")
-async def mailing(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    await message.answer(
-        "Отправьте текст для рассылки."
-    )
 # ================= MAIN =================
 
 async def main():
