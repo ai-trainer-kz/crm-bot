@@ -95,8 +95,6 @@ client_kb = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
-    
-    resize_keyboard=Tru
 
 admin_kb = ReplyKeyboardMarkup(
     keyboard=[
