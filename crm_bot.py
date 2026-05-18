@@ -977,7 +977,6 @@ async def delete_service(message: Message):
 
         await message.answer("✅ Услуга удалена")
 
-
 # ================= DELETE MASTER =================
 
 waiting_delete_master = set()
@@ -1009,7 +1008,7 @@ async def delete_master_menu(message: Message):
 
 
 @dp.message(F.text)
-async def delete_master(message: Message):
+async def process_delete_master(message: Message):
 
     if message.from_user.id not in waiting_delete_master:
         return
@@ -1024,7 +1023,7 @@ async def delete_master(message: Message):
     conn.commit()
 
     await message.answer("✅ Мастер удален")
-    
+
 # ================= MAIN =================
 
 async def main():
