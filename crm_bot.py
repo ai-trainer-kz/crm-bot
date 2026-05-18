@@ -990,7 +990,7 @@ async def delete_master_menu(message: Message):
 
     waiting_delete_master.add(message.from_user.id)
 
-    cursor.execute("SELECT name, specialty FROM masters")
+    cursor.execute("SELECT name, profession FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
