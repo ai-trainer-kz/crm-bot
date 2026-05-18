@@ -991,7 +991,7 @@ async def delete_master_menu(message: Message):
 
     waiting_delete_master.add(message.from_user.id)
 
-    cursor.execute("SELECT name FROM masters")
+    cursor.execute("SELECT name, profession FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
@@ -1001,7 +1001,7 @@ async def delete_master_menu(message: Message):
     text = "Выберите мастера для удаления:\n\n"
 
     for master in masters:
-        text += f"• {master[0]}\n"
+        text += f"• {master[0]} — {master[1]}\n"
 
     text += "\nОтправьте имя мастера."
 
@@ -1024,7 +1024,7 @@ async def delete_master(message: Message):
     conn.commit()
 
     await message.answer("✅ Мастер удален")
-
+    
 @dp.message(F.text == "➖ Удалить мастера")
 async def delete_master_list(message: Message):
 
@@ -1033,28 +1033,6 @@ async def delete_master_list(message: Message):
 
     cursor.execute("SELECT name, profession FROM masters")
     masters = cursor.fetchall()
-
-    text = "Выберите мастера для удаления:\n\n"
-
-    for master in masters:
-        text += f"• {master[0]} — {master[1]}\n"
-
-    text += "\nОтправьте имя мастера."
-
-    await message.answer(text)
-
-@dp.message(F.text == "➖ Удалить мастера")
-async def delete_master_list(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT name, profession FROM masters")
-    masters = cursor.fetchall()
-
-    if not masters:
-        await message.answer("Мастеров нет.")
-        return
 
     text = "Выберите мастера для удаления:\n\n"
 
