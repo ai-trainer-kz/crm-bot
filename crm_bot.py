@@ -770,37 +770,7 @@ async def save_booking(message: Message):
         await message.answer(
             f"❌ Ошибка:\n{e}"
         )
-
-    cursor.execute("SELECT title, price FROM services")
-
-    services_list = cursor.fetchall()
-
-    if not services_list:
-        await message.answer("Услуги пока не добавлены.")
-        return
-
-    text = "💅 Наши услуги:\n\n"
-
-    for service in services_list:
-        text += f"• {service[0]} — {service[1]}₸\n"
-
-    await message.answer(text)
-
-    cursor.execute("SELECT name, specialty FROM masters")
-
-    masters_list = cursor.fetchall()
-
-    if not masters_list:
-        await message.answer("Мастера пока не добавлены.")
-        return
-
-    text = "👩 Наши мастера:\n\n"
-
-    for master in masters_list:
-        text += f"• {master[0]} — {master[1]}\n"
-
-    await message.answer(text)
-
+        
 @dp.message(F.text == "🕒 Мои записи")
 async def my_appointments(message: Message):
 
