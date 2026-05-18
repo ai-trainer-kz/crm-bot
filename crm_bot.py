@@ -25,6 +25,10 @@ ADMIN_IDS = [
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+waiting_add_master = set()
+waiting_delete_master = set()
+waiting_delete_service = set()
+
 # ================= DATABASE =================
 
 conn = psycopg2.connect(DATABASE_URL)
@@ -187,6 +191,186 @@ async def admin_panel(message: Message):
         text,
         reply_markup=admin_kb
     )
+# ================= SHOW SERVICES =================
+
+@dp.message(F.text == "📋 Услуги")
+async def show_services(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT title FROM services")
+    services = cursor.fetchall()
+
+    if not services:
+        await message.answer("❌ Услуг пока нет.")
+        return
+
+    text = " Список услуг:\n\n"
+
+    for service in services:
+        text += f"• {service[0]}\n"
+
+    await message.answer(text)
+
+# ================= SHOW MASTERS =================
+
+@dp.message(F.text == "👨‍💼 Мастера")
+async def show_masters(message: Message):
+    
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name, specialty FROM masters")
+    masters = cursor.fetchall()
+
+    if not masters:
+        await message.answer("❌ Мастеров пока нет.")
+        return
+
+    text = "Список мастеров:\n\n"
+
+    for master in masters:
+        text += f"• {master[0]} — {master[1]}\n"
+
+    await message.answer(text)
+
+# ================= AUTO ADD SERVICE =================
+
+@dp.message(F.text.contains(","))
+async def text_handler(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    text = message.text
+    parts = text.split(",")
+
+# ================= DELETE SERVICE =================
+
+@dp.message(F.text == "➖ Удалить услугу")
+async def delete_service_menu(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT title FROM services")
+    services = cursor.fetchall()
+
+    if not services:
+        await message.answer("❌ Услуг нет.")
+        return
+    
+    waiting_delete_service.add(message.from_user.id)
+    
+    text = "Выберите услугу для удаления:\n\n"
+
+    for service in services:
+        text += f"• {service[0]}\n"
+
+    text += "\nОтправьте точное название услуги."
+
+    await message.answer(text)
+
+@dp.message(F.text)
+async def delete_service(message: Message):
+
+    if message.from_user.id not in waiting_delete_service:
+        return
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    service_name = message.text.strip()
+
+    cursor.execute(
+        "SELECT * FROM services WHERE title = %s",
+        (service_name,)
+    )
+
+    service = cursor.fetchone()
+
+    if not service:
+
+        waiting_delete_service.remove(message.from_user.id)
+
+        await message.answer("❌ Услуга не найдена")
+        return
+
+    cursor.execute(
+        "DELETE FROM services WHERE title = %s",
+        (service_name,)
+    )
+
+    conn.commit()
+
+    waiting_delete_service.remove(message.from_user.id)
+
+    await message.answer("✅ Услуга удалена")
+
+# ================= DELETE MASTER =================
+
+@dp.message(F.text == "➖ Удалить мастера")
+async def delete_master_menu(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name FROM masters")
+    masters = cursor.fetchall()
+
+    if not masters:
+        await message.answer("❌ Мастеров нет.")
+        return
+
+    waiting_delete_master.add(message.from_user.id)
+
+    text = "Выберите мастера для удаления:\n\n"
+
+    for master in masters:
+        text += f"• {master[0]}\n"
+
+    text += "\nОтправьте точное имя мастера."
+
+    await message.answer(text)
+
+@dp.message(F.text)
+async def delete_master(message: Message):
+
+    if message.from_user.id not in waiting_delete_master:
+        return
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    master_name = message.text.strip()
+
+    cursor.execute(
+        "SELECT * FROM masters WHERE name = %s",
+        (master_name,)
+    )
+
+    master = cursor.fetchone()
+
+    if not master:
+
+        waiting_delete_master.remove(message.from_user.id)
+
+        await message.answer("❌ Мастер не найден")
+        return
+
+    cursor.execute(
+        "DELETE FROM masters WHERE name = %s",
+        (master_name,)
+    )
+
+    conn.commit()
+
+    waiting_delete_master.remove(message.from_user.id)
+
+    await message.answer("✅ Мастер удален")
+
+
 # ================= CLIENT MENU =================
 
 @dp.message(F.text == "📅 Записаться")
@@ -541,7 +725,7 @@ async def save_booking(message: Message):
             f"❌ Ошибка:\n{e}"
         )
         
-@dp.message(F.text == "📋 Услуги")
+@dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
 
     cursor.execute("SELECT title, price FROM services")
@@ -934,225 +1118,6 @@ async def mailing(message: Message):
     await message.answer(
         "Отправьте текст для рассылки."
     )
-
-# ================= AUTO ADD SERVICE =================
-
-@dp.message(F.text.contains(","))
-async def text_handler(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    text = message.text
-    parts = text.split(",")
-
-    # ================= SERVICE =================
-
-    if len(parts) == 3:
-
-        title = parts[0].strip()
-        price = int(parts[1].strip())
-        duration = int(parts[2].strip())
-
-        cursor.execute(
-            """
-            INSERT INTO services (title, price, duration)
-            VALUES (%s, %s, %s)
-            """,
-            (title, price, duration)
-        )
-
-        conn.commit()
-
-        await message.answer("✅ Услуга добавлена")
-
-    # ================= MASTER =================
-
-    elif len(parts) == 2:
-
-        name = parts[0].strip()
-        specialty = parts[1].strip()
-
-        cursor.execute(
-            """
-            INSERT INTO masters (name, specialty)
-            VALUES (%s, %s)
-            """,
-            (name, specialty)
-        )
-
-        conn.commit()
-
-        await message.answer("✅ Мастер добавлен")
-
-# ================= DELETE SERVICE =================
-
-@dp.message(F.text == "➖ Удалить услугу")
-async def delete_service_menu(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT title FROM services")
-    services = cursor.fetchall()
-
-    if not services:
-        await message.answer("❌ Услуг нет.")
-        return
-    
-    waiting_delete_service.add(message.from_user.id)
-    
-    text = "Выберите услугу для удаления:\n\n"
-
-    for service in services:
-        text += f"• {service[0]}\n"
-
-    text += "\nОтправьте точное название услуги."
-
-    await message.answer(text)
-
-@dp.message(F.text)
-async def delete_service(message: Message):
-
-    if message.from_user.id not in waiting_delete_service:
-        return
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    service_name = message.text.strip()
-
-    cursor.execute(
-        "SELECT * FROM services WHERE title = %s",
-        (service_name,)
-    )
-
-    service = cursor.fetchone()
-
-    if not service:
-
-        waiting_delete_service.remove(message.from_user.id)
-
-        await message.answer("❌ Услуга не найдена")
-        return
-
-    cursor.execute(
-        "DELETE FROM services WHERE title = %s",
-        (service_name,)
-    )
-
-    conn.commit()
-
-    waiting_delete_service.remove(message.from_user.id)
-
-    await message.answer("✅ Услуга удалена")
-
-# ================= DELETE MASTER =================
-
-@dp.message(F.text == "➖ Удалить мастера")
-async def delete_master_menu(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT name FROM masters")
-    masters = cursor.fetchall()
-
-    if not masters:
-        await message.answer("❌ Мастеров нет.")
-        return
-
-    waiting_delete_master.add(message.from_user.id)
-
-    text = "Выберите мастера для удаления:\n\n"
-
-    for master in masters:
-        text += f"• {master[0]}\n"
-
-    text += "\nОтправьте точное имя мастера."
-
-    await message.answer(text)
-
-@dp.message(F.text)
-async def delete_master(message: Message):
-
-    if message.from_user.id not in waiting_delete_master:
-        return
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    master_name = message.text.strip()
-
-    cursor.execute(
-        "SELECT * FROM masters WHERE name = %s",
-        (master_name,)
-    )
-
-    master = cursor.fetchone()
-
-    if not master:
-
-        waiting_delete_master.remove(message.from_user.id)
-
-        await message.answer("❌ Мастер не найден")
-        return
-
-    cursor.execute(
-        "DELETE FROM masters WHERE name = %s",
-        (master_name,)
-    )
-
-    conn.commit()
-
-    waiting_delete_master.remove(message.from_user.id)
-
-    await message.answer("✅ Мастер удален")
-
-# ================= SHOW SERVICES =================
-
-@dp.message(F.text == "💅 Услуги")
-async def show_services(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT title FROM services")
-    services = cursor.fetchall()
-
-    if not services:
-        await message.answer("❌ Услуг пока нет.")
-        return
-
-    text = " Список услуг:\n\n"
-
-    for service in services:
-        text += f"• {service[0]}\n"
-
-    await message.answer(text)
-
-
-# ================= SHOW MASTERS =================
-
-@dp.message(F.text == "👨‍💼 Мастера")
-async def show_masters(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("SELECT name, specialty FROM masters")
-    masters = cursor.fetchall()
-
-    if not masters:
-        await message.answer("❌ Мастеров пока нет.")
-        return
-
-    text = "Список мастеров:\n\n"
-
-    for master in masters:
-        text += f"• {master[0]} — {master[1]}\n"
-
-    await message.answer(text)
 # ================= MAIN =================
 
 async def main():
