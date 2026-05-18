@@ -603,7 +603,6 @@ async def my_appointments(message: Message):
             f"👩‍🔬 Мастер: {item[1]}\n"
             f"📅 Дата: {item[2]}\n"
             f"⏰ Время: {item[3]}\n"
-            f"📌 Статус: {item[4]}\n\n"
         )
 
     await message.answer(text)
@@ -1043,6 +1042,19 @@ async def delete_master(message: Message):
         conn.commit()
 
         await message.answer("✅ Мастер удален")
+
+@dp.message(F.text == "/clear")
+async def clear_db(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("DELETE FROM appointments")
+
+    conn.commit()
+
+    await message.answer("✅ Все записи очищены")
+
 # ================= SHOW SERVICES =================
 
 @dp.message(F.text == "Услуги")
