@@ -32,9 +32,6 @@ conn.autocommit = True
 
 cursor = conn.cursor()
 
-cursor.execute("DELETE FROM appointments")
-conn.commit()
-
 # ================= TABLES =================
 
 cursor.execute("""
@@ -1045,18 +1042,6 @@ async def delete_master(message: Message):
         conn.commit()
 
         await message.answer("✅ Мастер удален") 
-
-@dp.message(F.text == "/clear")
-async def clear_db(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute("DELETE FROM appointments")
-
-    conn.commit()
-
-    await message.answer("✅ Все записи очищены")
 
 # ================= SHOW SERVICES =================
 
