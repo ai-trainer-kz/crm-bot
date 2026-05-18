@@ -541,7 +541,7 @@ async def save_booking(message: Message):
             f"❌ Ошибка:\n{e}"
         )
         
-@dp.message(F.text == "💅 Услуги")
+@dp.message(F.text == "📋 Услуги")
 async def services(message: Message):
 
     cursor.execute("SELECT title, price FROM services")
@@ -1134,7 +1134,7 @@ async def show_services(message: Message):
 
 # ================= SHOW MASTERS =================
 
-@dp.message(F.text == "👱‍♀️ Мастера")
+@dp.message(F.text == "👨‍💼 Мастера")
 async def show_masters(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
