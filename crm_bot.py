@@ -1043,6 +1043,28 @@ async def delete_master_list(message: Message):
 
     await message.answer(text)
 
+@dp.message(F.text == "➖ Удалить мастера")
+async def delete_master_list(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute("SELECT name, profession FROM masters")
+    masters = cursor.fetchall()
+
+    if not masters:
+        await message.answer("Мастеров нет.")
+        return
+
+    text = "Выберите мастера для удаления:\n\n"
+
+    for master in masters:
+        text += f"• {master[0]} — {master[1]}\n"
+
+    text += "\nОтправьте имя мастера."
+
+    await message.answer(text)
+
 # ================= MAIN =================
 
 async def main():
