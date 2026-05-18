@@ -81,18 +81,12 @@ CREATE TABLE IF NOT EXISTS appointments (
 client_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="📅 Записаться")
-        ],
-        [
-            KeyboardButton(text="💅 Услуги"),
-            KeyboardButton(text="💰 Прайс")
-        ],
-        [
-            KeyboardButton(text="👩‍🔬 Мастера"),
-            KeyboardButton(text="🕒 Мои записи")
-        ],
-        [
+            KeyboardButton(text="📅 Записаться"),
             KeyboardButton(text="❌ Отменить запись")
+        ],
+        [
+            KeyboardButton(text="💰 Прайс"),
+            KeyboardButton(text="🕒 Мои записи")
         ],
         [
             KeyboardButton(text="📍 Адрес"),
