@@ -25,6 +25,9 @@ ADMIN_IDS = [
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+cursor.execute("DELETE FROM appointments")
+conn.commit()
+
 # ================= DATABASE =================
 
 conn = psycopg2.connect(DATABASE_URL)
