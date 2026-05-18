@@ -499,11 +499,12 @@ async def save_booking(message: Message):
 
         # Сообщение клиенту
         await message.answer(
-            f"✅ Запись подтверждена!\n\n"
+            f"✅ Вы успешно записаны!\n\n"
             f"💅 Услуга: {service}\n"
-            f"👩‍🔬 Мастер: {master}\n"
+            f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
-            f"🕐 Время: {time}",
+            f"🕐 Время: {time}\n\n"
+            f"❤️ Ждём вас!",
             reply_markup=client_kb
         )
 
