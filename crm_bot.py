@@ -648,7 +648,7 @@ async def cancel_booking(message: Message):
             (client_id,)
         )
 
-        appointment = cursor.fetchone()
+        appointment = cursor.fetchone() 
 
         if not appointment:
             await message.answer("❌ Записей не найдено.")
