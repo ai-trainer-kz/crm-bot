@@ -1007,7 +1007,7 @@ async def delete_master_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message(F.text)
+@dp.message()
 async def process_delete_master(message: Message):
 
     if message.from_user.id not in waiting_delete_master:
@@ -1023,7 +1023,6 @@ async def process_delete_master(message: Message):
     conn.commit()
 
     await message.answer("✅ Мастер удален")
-
 # ================= MAIN =================
 
 async def main():
