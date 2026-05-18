@@ -1035,8 +1035,8 @@ async def delete_master(message: Message):
     if master:
 
         cursor.execute(
-            "DELETE FROM masters WHERE name = %s",
-            (message.text,)
+            "DELETE FROM masters WHERE name ILIKE %s",
+            (f"%{message.text.strip()}%",)
         )
 
         conn.commit()
