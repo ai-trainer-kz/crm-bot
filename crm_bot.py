@@ -84,7 +84,7 @@ client_kb = ReplyKeyboardMarkup(
             KeyboardButton(text="📅 Записаться")
         ],
         [
-            KeyboardButton(text="💅 Услуги"),
+            KeyboardButton(text="📋 Услуги")
             KeyboardButton(text="👩‍🔬 Мастера")
         ],
         [
@@ -230,7 +230,7 @@ async def booking(message: Message):
 
 user_booking = {}
 
-@dp.message(F.text.startswith("💅"))
+@dp.message(F.text == "📋 Услуги")
 async def choose_service(message: Message):
 
     service = message.text.replace("💅 ", "")
@@ -265,7 +265,7 @@ async def choose_service(message: Message):
         keyboard.append(
             [
                 KeyboardButton(
-                    text=f"👩‍🔬 {master[0]}"
+                    text=f"👩 {master[0]}"
                 )
             ]
         )
@@ -277,16 +277,16 @@ async def choose_service(message: Message):
 
     await message.answer(
         f"💅 Услуга: {service}\n\n"
-        f"👩‍🔬 Выберите мастера:",
+        f"👩 Выберите мастера:",
         reply_markup=masters_kb
     )
 
 # ================= BOOKING STEP 3 =================
 
-@dp.message(F.text.startswith("👩‍🔬"))
+@dp.message(F.text.startswith("👩"))
 async def choose_master(message: Message):
 
-    master = message.text.replace("👩‍🔬 ", "")
+    master = message.text.replace("👩 ", "")
 
     if message.from_user.id not in user_booking:
         return
