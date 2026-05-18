@@ -85,22 +85,18 @@ CREATE TABLE IF NOT EXISTS appointments (
 
 client_kb = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="📅 Записаться")
-        ],
-        [
-            KeyboardButton(text="💅 Услуги"),
-            KeyboardButton(text="👩 Мастера")
-        ],
-        [
-            KeyboardButton(text="🕒 Мои записи"),
-            KeyboardButton(text="❌ Отменить запись")
-        ],
-        [
-            KeyboardButton(text="📍 Адрес"),
-            KeyboardButton(text="📞 Контакты")
-        ]
+    [
+        KeyboardButton(text="📅 Записаться")
     ],
+    [
+        KeyboardButton(text="🕒 Мои записи"),
+        KeyboardButton(text="❌ Отменить запись")
+    ],
+    [
+        KeyboardButton(text="📍 Адрес"),
+        KeyboardButton(text="📞 Контакты")
+    ]
+],
     resize_keyboard=True
 )
 
@@ -774,9 +770,6 @@ async def save_booking(message: Message):
         await message.answer(
             f"❌ Ошибка:\n{e}"
         )
-        
-@dp.message(F.text == "💅 Услуги")
-async def services(message: Message):
 
     cursor.execute("SELECT title, price FROM services")
 
@@ -792,9 +785,6 @@ async def services(message: Message):
         text += f"• {service[0]} — {service[1]}₸\n"
 
     await message.answer(text)
-
-@dp.message(F.text == "👩 Мастера")
-async def masters(message: Message):
 
     cursor.execute("SELECT name, specialty FROM masters")
 
