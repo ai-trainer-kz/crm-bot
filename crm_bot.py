@@ -93,6 +93,8 @@ client_kb = ReplyKeyboardMarkup(
             KeyboardButton(text="📞 Контакты")
         ]
     ],
+    resize_keyboard=True
+)
     
     resize_keyboard=Tru
 
