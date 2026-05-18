@@ -877,18 +877,53 @@ async def add_service(message: Message):
     await message.answer(text)
 
 @dp.message(F.text == "➕ Добавить мастера")
-async def add_master(message: Message):
+async def add_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
+    waiting_add_master.add(message.from_user.id)
+
     text = (
-        "Чтобы добавить мастера,\n"
+        "Чтобы добавить мастера:\n\n"
         "отправьте так:\n\n"
         "Алина,Маникюр"
     )
 
     await message.answer(text)
+
+@dp.message(F.text)
+async def process_add_master(message: Message):
+
+    if message.from_user.id not in waiting_add_master:
+        return
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    try:
+
+        name, specialty = message.text.split(",", 1)
+
+        name = name.strip()
+        specialty = specialty.strip()
+
+        cursor.execute(
+            "INSERT INTO masters (name, specialty) VALUES (%s, %s)",
+            (name, specialty)
+        )
+
+        conn.commit()
+
+        waiting_add_master.remove(message.from_user.id)
+
+        await message.answer("✅ Мастер добавлен")
+
+    except:
+
+        await message.answer(
+            "❌ Ошибка.\n\nПример:\nАлина,Маникюр"
+        )
 
 @dp.message(F.text == "📢 Рассылка")
 async def mailing(message: Message):
@@ -1026,7 +1061,9 @@ async def delete_master_menu(message: Message):
 
     await message.answer(text)
 
-@dp.message()
+@dp.message(
+    F.text,
+)
 async def delete_master(message: Message):
 
     if message.from_user.id not in waiting_delete_master:
@@ -1062,26 +1099,6 @@ async def delete_master(message: Message):
 
     await message.answer("✅ Мастер удален")
 
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute(
-        "SELECT * FROM masters WHERE name = %s",
-        (message.text,)
-    )
-
-    master = cursor.fetchone()
-
-    if master:
-
-        cursor.execute(
-            "DELETE FROM masters WHERE name = %s",
-            (message.text,)
-        )
-
-        conn.commit()
-
-        await message.answer("✅ Мастер удален")
 # ================= SHOW SERVICES =================
 
 @dp.message(F.text == "Услуги")
