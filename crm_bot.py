@@ -1041,7 +1041,7 @@ async def delete_master(message: Message):
 
         conn.commit()
 
-        await message.answer("✅ Мастер удален")
+        await message.answer("✅ Мастер удален") 
 
 @dp.message(F.text == "/clear")
 async def clear_db(message: Message):
