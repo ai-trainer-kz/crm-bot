@@ -85,13 +85,10 @@ client_kb = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="💅 Услуги"),
-            KeyboardButton(text="💰 Прайс")
+            KeyboardButton(text="👩‍🔬 Мастера")
         ],
         [
-            KeyboardButton(text="👩‍🔬 Мастера"),
-            KeyboardButton(text="🕒 Мои записи")
-        ],
-        [
+            KeyboardButton(text="🕒 Мои записи"),
             KeyboardButton(text="❌ Отменить запись")
         ],
         [
@@ -233,9 +230,7 @@ async def booking(message: Message):
 
 user_booking = {}
 
-@dp.message(
-    F.text.startswith("💅 ")
-)
+@dp.message(F.text.startswith("💅"))
 async def choose_service(message: Message):
 
     service = message.text.replace("💅 ", "")
@@ -270,7 +265,7 @@ async def choose_service(message: Message):
         keyboard.append(
             [
                 KeyboardButton(
-                    text=f"👩‍🔬 {master[0]}"
+                    text=f"👩 {master[0]}"
                 )
             ]
         )
@@ -282,16 +277,16 @@ async def choose_service(message: Message):
 
     await message.answer(
         f"💅 Услуга: {service}\n\n"
-        f"👩‍🔬 Выберите мастера:",
+        f"👩 Выберите мастера:",
         reply_markup=masters_kb
     )
 
 # ================= BOOKING STEP 3 =================
 
-@dp.message(F.text.startswith("👩‍🔬"))
+@dp.message(F.text.startswith("👩"))
 async def choose_master(message: Message):
 
-    master = message.text.replace("👩‍🔬 ", "")
+    master = message.text.replace("👩 ", "")
 
     if message.from_user.id not in user_booking:
         return
@@ -306,13 +301,18 @@ async def choose_master(message: Message):
             [
                 KeyboardButton(text="📅 Завтра")
             ],
+            [
+                KeyboardButton(text="📅 17 мая")
+            ],
+            [
+                KeyboardButton(text="📅 18 мая")
             ]
         ],
         resize_keyboard=True
     )
 
     await message.answer(
-        f"👩‍🔬 Мастер: {master}\n\n"
+        f"👩 Мастер: {master}\n\n"
         f"📅 Выберите дату:",
         reply_markup=dates_kb
     )
@@ -323,6 +323,8 @@ async def choose_master(message: Message):
     F.text.in_([
         "📅 Сегодня",
         "📅 Завтра",
+        "📅 17 мая",
+        "📅 18 мая"
     ])
 )
 async def choose_date(message: Message):
@@ -505,12 +507,11 @@ async def save_booking(message: Message):
 
         # Сообщение клиенту
         await message.answer(
-            f"✅ Вы успешно записаны!\n\n"
+            f"✅ Запись подтверждена!\n\n"
             f"💅 Услуга: {service}\n"
-            f"👩‍🔬 Мастер: {master}\n"
+            f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
-            f"🕐 Время: {time}\n\n"
-            f"❤️ Ждём вас!",
+            f"🕐 Время: {time}",
             reply_markup=client_kb
         )
 
@@ -534,10 +535,7 @@ async def save_booking(message: Message):
             f"❌ Ошибка:\n{e}"
         )
         
-await message.answer(
-    text,
-    reply_markup=client_kb
-)
+@dp.message(F.text == "💅 Услуги")
 async def services(message: Message):
 
     cursor.execute("SELECT title, price FROM services")
@@ -572,14 +570,6 @@ async def masters(message: Message):
         text += f"• {master[0]} — {master[1]}\n"
 
     await message.answer(text)
-
-@dp.message(F.text == "⬅️ Назад")
-async def back_menu(message: Message):
-
-    await message.answer(
-        "Главное меню",
-        reply_markup=client_kb
-    )
 
 @dp.message(F.text == "🕒 Мои записи")
 async def my_appointments(message: Message):
@@ -708,7 +698,7 @@ async def cancel_booking(message: Message):
         await message.answer(
             f"✅ Запись отменена.\n\n"
             f"💅 Услуга: {service}\n"
-            f"👩‍🔬 Мастер: {master}\n"
+            f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
             f"🕒 Время: {time}"
         )
@@ -805,7 +795,7 @@ async def all_appointments(message: Message):
 
         text += (
             f"💅 Услуга: {service}\n"
-            f"👩‍🔬 Мастер: {master}\n"
+            f"👩 Мастер: {master}\n"
             f"📅 Дата: {date}\n"
             f"🕒 Время: {time}\n\n"
         )
