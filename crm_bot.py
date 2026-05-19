@@ -995,11 +995,12 @@ async def delete_master_menu(message: Message):
     text = "Выберите мастера для удаления:\n\n"
 
     for master in masters:
-        text += f"• {service[0]}\n"
+        text += f"• {master[0]} — {master[1]}\n"
 
     text += "\nОтправьте точное имя мастера."
 
     await message.answer(text)
+
 
 @dp.message(F.text & ~F.text.in_(["Мастера", "Услуга", "➖ Удалить мастера"]))
 async def delete_master(message: Message):
