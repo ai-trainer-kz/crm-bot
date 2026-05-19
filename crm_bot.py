@@ -1,6 +1,9 @@
 import os
 import asyncio
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime, timedelta
+
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import (
     Message,
@@ -24,6 +27,9 @@ ADMIN_IDS = [
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+scheduler = AsyncIOScheduler()
+scheduler.start()
 
 # ================= DATABASE =================
 
@@ -75,6 +81,53 @@ CREATE TABLE IF NOT EXISTS appointments (
     created_at TIMESTAMP DEFAULT NOW()
 )
 """)
+
+# ================= REMINDER =================
+
+async def send_reminders():
+
+    now = datetime.now()
+    reminder_time = now + timedelta(hours=1)
+
+    current_date = reminder_time.strftime("%Y-%m-%d")
+    current_time = reminder_time.strftime("%H:%M")
+
+    cursor.execute(
+        """
+        SELECT user_id, service, master, date, time
+        FROM bookings
+        WHERE date = %s AND time = %s
+        """,
+        (current_date, current_time)
+    )
+
+    bookings = cursor.fetchall()
+
+    for booking in bookings:
+
+        user_id = booking[0]
+        service = booking[1]
+        master = booking[2]
+        date = booking[3]
+        time = booking[4]
+
+        try:
+
+            await bot.send_message(
+                user_id,
+                f"⏰ Напоминание!\n\n"
+                f"Вы записаны на:\n"
+                f"💅 {service}\n"
+                f"👩‍🔧 Мастер: {master}\n"
+                f"📅 {date}\n"
+                f"🕒 {time}"
+            )
+
+        except:
+            pass
+
+
+scheduler.add_job(send_reminders, "interval", minutes=1)
 
 # ================= KEYBOARDS =================
 
