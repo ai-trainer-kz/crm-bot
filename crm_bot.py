@@ -1000,6 +1000,32 @@ async def delete_master_menu(message: Message):
     text += "\nОтправьте точное имя мастера."
 
     await message.answer(text)
+
+
+@dp.message(F.text)
+async def delete_master(message: Message):
+
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    cursor.execute(
+        "SELECT * FROM masters WHERE name = %s",
+        (message.text,)
+    )
+
+    master = cursor.fetchone()
+
+    if not master:
+        return
+
+    cursor.execute(
+        "DELETE FROM masters WHERE name = %s",
+        (message.text,)
+    )
+
+    conn.commit()
+
+    await message.answer("✅ Мастер удален")
 # ================= MAIN =================
 
 async def main():
