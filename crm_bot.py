@@ -979,16 +979,11 @@ async def delete_service(message: Message):
 
 # ================= DELETE MASTER =================
 
-waiting_delete_master = set()
-
-
 @dp.message(F.text == "➖ Удалить мастера")
 async def delete_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
-
-    waiting_delete_master.add(message.from_user.id)
 
     cursor.execute("SELECT name, profession FROM masters")
     masters = cursor.fetchall()
@@ -1002,27 +997,38 @@ async def delete_master_menu(message: Message):
     for master in masters:
         text += f"• {master[0]} — {master[1]}\n"
 
-    text += "\nОтправьте имя мастера."
+    text += "\nОтправьте точное имя мастера."
 
     await message.answer(text)
 
 
-@dp.message()
-async def process_delete_master(message: Message):
+@dp.message(F.text & ~F.text.in_([
+    "Услуги",
+    "Мастера",
+    "➖ Удалить мастера"
+]))
+async def delete_master(message: Message):
 
-    if message.from_user.id not in waiting_delete_master:
+    if message.from_user.id not in ADMIN_IDS:
         return
 
-    waiting_delete_master.remove(message.from_user.id)
-
     cursor.execute(
-        "DELETE FROM masters WHERE name ILIKE %s",
-        (f"%{message.text.strip()}%",)
+        "SELECT * FROM masters WHERE name = %s",
+        (message.text,)
     )
 
-    conn.commit()
+    master = cursor.fetchone()
 
-    await message.answer("✅ Мастер удален")
+    if master:
+
+        cursor.execute(
+            "DELETE FROM masters WHERE name = %s",
+            (message.text,)
+        )
+
+        conn.commit()
+
+        await message.answer("✅ Мастер удален")
 # ================= MAIN =================
 
 async def main():
