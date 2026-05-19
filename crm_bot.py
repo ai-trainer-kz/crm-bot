@@ -29,7 +29,6 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 scheduler = AsyncIOScheduler()
-scheduler.start()
 
 # ================= DATABASE =================
 
@@ -1083,8 +1082,9 @@ async def main():
 
     print("CRM BOT STARTED")
 
+    scheduler.start()
+
     await dp.start_polling(bot)
-
-
+    
 if __name__ == "__main__":
     asyncio.run(main())
