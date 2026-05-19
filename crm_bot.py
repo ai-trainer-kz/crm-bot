@@ -985,7 +985,7 @@ async def delete_master_menu(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("SELECT name, profession FROM masters")
+    cursor.execute("SELECT name, specialty FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
