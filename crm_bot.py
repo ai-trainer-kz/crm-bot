@@ -930,14 +930,13 @@ async def text_handler(message: Message):
 
 # ================= DELETE SERVICE =================
 
-waiting_delete_service = set()
-
 @dp.message(F.text == "➖ Удалить услугу")
 async def delete_service_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
+    waiting_delete_master.discard(message.from_user.id)
     waiting_delete_service.add(message.from_user.id)
 
     cursor.execute("SELECT title FROM services")
@@ -955,7 +954,6 @@ async def delete_service_menu(message: Message):
     text += "\nОтправьте точное название услуги."
 
     await message.answer(text)
-
 
 @dp.message()
 async def delete_service(message: Message):
@@ -976,14 +974,13 @@ async def delete_service(message: Message):
 
 # ================= DELETE MASTER =================
 
-waiting_delete_master = set()
-
 @dp.message(F.text == "➖ Удалить мастера")
 async def delete_master_menu(message: Message):
 
     if message.from_user.id not in ADMIN_IDS:
         return
 
+    waiting_delete_service.discard(message.from_user.id)
     waiting_delete_master.add(message.from_user.id)
 
     cursor.execute("SELECT name FROM masters")
@@ -1001,7 +998,6 @@ async def delete_master_menu(message: Message):
     text += "\nОтправьте имя мастера."
 
     await message.answer(text)
-
 
 @dp.message()
 async def delete_master(message: Message):
