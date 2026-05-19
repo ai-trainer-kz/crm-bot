@@ -958,7 +958,7 @@ async def delete_service_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message()
+@dp.message(lambda message: message.from_user.id in waiting_delete_service)
 async def process_delete_service(message: Message):
 
     if message.from_user.id not in waiting_delete_service:
@@ -975,6 +975,7 @@ async def process_delete_service(message: Message):
 
     await message.answer("✅ Услуга удалена")
 
+    return
 # ================= DELETE MASTER =================
 
 waiting_delete_master = set()
@@ -1005,7 +1006,7 @@ async def delete_master_menu(message: Message):
     await message.answer(text)
 
 
-@dp.message()
+@dp.message(lambda message: message.from_user.id in waiting_delete_master)
 async def process_delete_master(message: Message):
 
     if message.from_user.id not in waiting_delete_master:
@@ -1021,6 +1022,8 @@ async def process_delete_master(message: Message):
     conn.commit()
 
     await message.answer("✅ Мастер удален")
+
+    return
 # ================= MAIN =================
 
 async def main():
