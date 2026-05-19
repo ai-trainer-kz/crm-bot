@@ -541,7 +541,7 @@ async def services(message: Message):
 @dp.message(F.text == "👩‍🔬 Мастера")
 async def masters(message: Message):
 
-    cursor.execute("SELECT name, specialty FROM masters")
+    ursor.execute("SELECT * FROM masters")
 
     masters_list = cursor.fetchall()
 
@@ -985,7 +985,7 @@ async def delete_master_menu(message: Message):
     if message.from_user.id not in ADMIN_IDS:
         return
 
-    cursor.execute("SELECT name, specialty FROM masters")
+    cursor.execute("SELECT * FROM masters")
     masters = cursor.fetchall()
 
     if not masters:
@@ -995,36 +995,11 @@ async def delete_master_menu(message: Message):
     text = "Выберите мастера для удаления:\n\n"
 
     for master in masters:
-        text += f"• {master[0]} — {master[1]}\n"
+        text += f"• {master[1]}\n"
 
     text += "\nОтправьте точное имя мастера."
 
     await message.answer(text)
-
-
-@dp.message(F.text & ~F.text.in_(["Мастера", "Услуга", "➖ Удалить мастера"]))
-async def delete_master(message: Message):
-
-    if message.from_user.id not in ADMIN_IDS:
-        return
-
-    cursor.execute(
-        "SELECT * FROM masters WHERE name = %s",
-        (message.text,)
-    )
-
-    master = cursor.fetchone()
-
-    if master:
-
-        cursor.execute(
-            "DELETE FROM masters WHERE name = %s",
-            (message.text,)
-        )
-
-        conn.commit()
-
-        await message.answer("✅ Мастер удален")
 # ================= MAIN =================
 
 async def main():
