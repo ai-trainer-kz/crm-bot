@@ -541,7 +541,7 @@ async def services(message: Message):
 @dp.message(F.text == "👩‍🔬 Мастера")
 async def masters(message: Message):
 
-    cursor.execute("SELECT name, profession FROM masters")
+    cursor.execute("SELECT name, specialty FROM masters")
 
     masters_list = cursor.fetchall()
 
